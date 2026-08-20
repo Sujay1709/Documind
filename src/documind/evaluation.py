@@ -22,12 +22,19 @@ import logging
 import re
 from collections import Counter
 from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .config import Settings, get_settings
 from .pipeline import answer as pipeline_answer
 
 logger = logging.getLogger(__name__)
+
+# Default locations for persisted eval output. Timestamped runs live under
+# ``eval/runs/<UTC>/``; ``eval/report.{json,md}`` always mirror the latest run.
+DEFAULT_RUNS_DIR = Path("eval/runs")
+DEFAULT_LATEST_JSON = Path("eval/report.json")
+DEFAULT_LATEST_MD = Path("eval/report.md")
 
 # A small stopword set so faithfulness/keyword metrics focus on content words.
 _STOPWORDS = {
@@ -302,3 +309,135 @@ def evaluate_dataset(
             "llm_judge": use_llm_judge,
         },
     )
+
+
+# --------------------------------------------------------------------------- #
+# Persistence / run history
+# --------------------------------------------------------------------------- #
+def utc_run_id(when: datetime | None = None) -> str:
+    """Return a filesystem-safe UTC timestamp id, e.g. ``20260813-231405``."""
+    when = when or datetime.now(timezone.utc)
+    return when.strftime("%Y%m%d-%H%M%S")
+
+
+def list_run_dirs(runs_dir: Path | str = DEFAULT_RUNS_DIR) -> list[Path]:
+    """Return existing run directories sorted oldest → newest by name."""
+    root = Path(runs_dir)
+    if not root.is_dir():
+        return []
+    return sorted(p for p in root.iterdir() if p.is_dir() and (p / "report.json").is_file())
+
+
+def load_aggregate_from_report(path: Path | str) -> dict[str, float]:
+    """Load the ``aggregate`` object from a persisted report JSON file."""
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    agg = data.get("aggregate") or {}
+    return {str(k): float(v) for k, v in agg.items()}
+
+
+def diff_aggregates(
+    current: dict[str, float],
+    previous: dict[str, float],
+) -> list[dict[str, float | str]]:
+    """Compare two aggregate metric dicts.
+
+    Returns a list of rows ``{metric, previous, current, delta}`` covering the
+    union of keys. Missing values are treated as ``0.0`` so a brand-new metric
+    still shows up as a positive delta.
+    """
+    keys = sorted(set(current) | set(previous))
+    rows: list[dict[str, float | str]] = []
+    for key in keys:
+        cur = float(current.get(key, 0.0))
+        prev = float(previous.get(key, 0.0))
+        rows.append(
+            {
+                "metric": key,
+                "previous": round(prev, 4),
+                "current": round(cur, 4),
+                "delta": round(cur - prev, 4),
+            }
+        )
+    return rows
+
+
+def format_aggregate_diff(rows: list[dict[str, float | str]]) -> str:
+    """Render ``diff_aggregates`` rows as a Markdown table."""
+    if not rows:
+        return ""
+    lines = [
+        "## Delta vs previous run",
+        "",
+        "| Metric | Previous | Current | Δ |",
+        "| --- | --- | --- | --- |",
+    ]
+    for row in rows:
+        delta = float(row["delta"])
+        sign = "+" if delta > 0 else ""
+        lines.append(
+            f"| {row['metric']} | {float(row['previous']):.3f} | "
+            f"{float(row['current']):.3f} | {sign}{delta:.3f} |"
+        )
+    return "\n".join(lines)
+
+
+def persist_report(
+    report: EvalReport,
+    runs_dir: Path | str = DEFAULT_RUNS_DIR,
+    latest_json: Path | str = DEFAULT_LATEST_JSON,
+    latest_md: Path | str = DEFAULT_LATEST_MD,
+    run_id: str | None = None,
+) -> dict:
+    """Write a timestamped run plus refresh the latest report copies.
+
+    Returns a dict with ``run_dir``, ``json_path``, ``md_path``, ``previous``,
+    and ``diff`` (rows from ``diff_aggregates``, empty if no prior run).
+    """
+    runs_root = Path(runs_dir)
+    runs_root.mkdir(parents=True, exist_ok=True)
+
+    previous_dirs = list_run_dirs(runs_root)
+    previous_agg: dict[str, float] = {}
+    previous_id: str | None = None
+    if previous_dirs:
+        previous_id = previous_dirs[-1].name
+        previous_agg = load_aggregate_from_report(previous_dirs[-1] / "report.json")
+
+    rid = run_id or utc_run_id()
+    run_dir = runs_root / rid
+    # Avoid colliding if two runs land in the same second.
+    if run_dir.exists():
+        rid = f"{rid}-{len(previous_dirs) + 1}"
+        run_dir = runs_root / rid
+    run_dir.mkdir(parents=True, exist_ok=False)
+
+    payload = report.to_dict()
+    payload["run_id"] = rid
+    payload["created_at"] = datetime.now(timezone.utc).isoformat()
+
+    json_path = run_dir / "report.json"
+    md_path = run_dir / "report.md"
+    json_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    diff_rows = diff_aggregates(report.aggregate, previous_agg) if previous_agg else []
+    md_body = report.to_markdown()
+    if diff_rows:
+        md_body = md_body.rstrip() + "\n\n" + format_aggregate_diff(diff_rows) + "\n"
+    md_path.write_text(md_body, encoding="utf-8")
+
+    latest_json_path = Path(latest_json)
+    latest_md_path = Path(latest_md)
+    latest_json_path.parent.mkdir(parents=True, exist_ok=True)
+    latest_json_path.write_text(json_path.read_text(encoding="utf-8"), encoding="utf-8")
+    latest_md_path.write_text(md_path.read_text(encoding="utf-8"), encoding="utf-8")
+
+    return {
+        "run_id": rid,
+        "run_dir": run_dir,
+        "json_path": json_path,
+        "md_path": md_path,
+        "latest_json": latest_json_path,
+        "latest_md": latest_md_path,
+        "previous": previous_id,
+        "diff": diff_rows,
+    }

@@ -1,0 +1,26 @@
+import { motion } from 'motion/react'
+
+export default function TopBar({ theme, onToggleTheme, docCount, hasToken, onAdmin }) {
+  return (
+    <motion.header
+      className="bar glass"
+      initial={{ y: -60, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ type: 'spring', stiffness: 220, damping: 26 }}
+    >
+      <motion.div className="logo" whileHover={{ rotate: -8, scale: 1.06 }}>📄</motion.div>
+      <div className="name">DocuMind</div>
+      <div className="tag">· local RAG · Ollama nemotron</div>
+      <div className="spacer" />
+      <div className="pill docs" title="Indexed documents on this server">
+        📚 <b>{docCount}</b> docs
+      </div>
+      <button className="btn-ghost" type="button" onClick={onAdmin}>
+        {hasToken ? 'Sign out' : 'Admin'}
+      </button>
+      <button className="btn-ghost" type="button" onClick={onToggleTheme} title="Toggle theme">
+        {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+      </button>
+    </motion.header>
+  )
+}

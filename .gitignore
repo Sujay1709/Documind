@@ -19,8 +19,12 @@ env/
 demo-rag-chroma/
 *.sqlite3
 
-# Generated evaluation reports
+# Generated evaluation reports (regenerate with make eval / make benchmark)
 eval/report.json
+eval/report.md
+eval/runs/
+eval/benchmark.json
+eval/benchmark.md
 
 # IDE / OS
 .vscode/
@@ -44,10 +48,5 @@ eval/report.json
 # Session scratch (Codex CLI, browser artifacts, working copies)
 .claude/
 .playwright-mcp/
-docs/
-documind/
+./documind/
 sample_pdfs/
-
-# Generated evaluation reports (regenerate with make benchmark)
-eval/benchmark.json
-eval/benchmark.md

@@ -1,3 +1,5 @@
+import json
+
 from documind import evaluation as ev
 from documind.evaluation import EvalSample
 from documind.pipeline import RetrievalResult
@@ -85,3 +87,69 @@ def test_report_markdown_renders(monkeypatch):
     report = ev.evaluate_dataset([EvalSample(question="q?")])
     md = report.to_markdown()
     assert "RAG evaluation" in md and "Aggregate metrics" in md
+
+
+# --- persistence / run history (no Ollama) ---------------------------------- #
+def test_diff_aggregates_and_format():
+    rows = ev.diff_aggregates(
+        {"answer_f1": 0.8, "faithfulness": 0.7},
+        {"answer_f1": 0.5, "mrr": 1.0},
+    )
+    by_metric = {r["metric"]: r for r in rows}
+    assert by_metric["answer_f1"]["delta"] == 0.3
+    assert by_metric["faithfulness"]["previous"] == 0.0
+    assert by_metric["mrr"]["current"] == 0.0
+    md = ev.format_aggregate_diff(rows)
+    assert "Delta vs previous run" in md
+    assert "answer_f1" in md and "+0.300" in md
+
+
+def test_persist_report_writes_run_and_latest(tmp_path, monkeypatch):
+    def fake_answer(question, history=None, source=None, settings=None):
+        return iter(["Paris"]), RetrievalResult(context="Paris capital", chunks=[])
+
+    monkeypatch.setattr(ev, "pipeline_answer", fake_answer)
+    report = ev.evaluate_dataset(
+        [EvalSample(question="q?", ground_truth="Paris", expected_keywords=["Paris"])]
+    )
+
+    runs_dir = tmp_path / "runs"
+    latest_json = tmp_path / "report.json"
+    latest_md = tmp_path / "report.md"
+
+    first = ev.persist_report(
+        report,
+        runs_dir=runs_dir,
+        latest_json=latest_json,
+        latest_md=latest_md,
+        run_id="20260101-000000",
+    )
+    assert first["previous"] is None
+    assert first["diff"] == []
+    assert (runs_dir / "20260101-000000" / "report.json").is_file()
+    assert latest_json.is_file() and latest_md.is_file()
+
+    # Bump a metric so the second run has a non-zero delta.
+    report2 = ev.EvalReport(
+        results=report.results,
+        aggregate={**report.aggregate, "answer_f1": report.aggregate.get("answer_f1", 0) + 0.1},
+        config=report.config,
+    )
+    second = ev.persist_report(
+        report2,
+        runs_dir=runs_dir,
+        latest_json=latest_json,
+        latest_md=latest_md,
+        run_id="20260101-000001",
+    )
+    assert second["previous"] == "20260101-000000"
+    assert any(r["metric"] == "answer_f1" and float(r["delta"]) == 0.1 for r in second["diff"])
+    assert "Delta vs previous run" in (second["md_path"]).read_text(encoding="utf-8")
+    assert json.loads(latest_json.read_text(encoding="utf-8"))["run_id"] == "20260101-000001"
+
+
+def test_utc_run_id_format():
+    from datetime import datetime, timezone
+
+    rid = ev.utc_run_id(datetime(2026, 8, 13, 23, 14, 5, tzinfo=timezone.utc))
+    assert rid == "20260813-231405"

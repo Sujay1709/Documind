@@ -25,9 +25,10 @@ smoke:
 static-test:
 	node tests/test_static_chunker.js
 
-# Single-config RAG evaluation (writes eval/report.json).
+# Single-config RAG evaluation. Persists to eval/runs/<UTC>/ and mirrors
+# eval/report.{json,md}; prints a delta vs the previous run when history exists.
 eval:
-	documind-eval --dataset eval/datasets/realistic.json --out eval/report.json
+	documind-eval --dataset eval/datasets/realistic.json
 
 # Multi-config comparison grid (writes eval/benchmark.{json,md}).
 # Needs Ollama running with the configured models pulled.

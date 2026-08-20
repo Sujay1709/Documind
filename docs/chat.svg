@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1536 864" role="img" aria-label="DocuMind chat with sources screenshot">
+  <defs>
+    <linearGradient id="bg2" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#CDBC97"/>
+      <stop offset="1" stop-color="#BFAE89"/>
+    </linearGradient>
+    <linearGradient id="bar2" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#FBF6EA"/>
+      <stop offset="1" stop-color="#F3EBD9"/>
+    </linearGradient>
+    <linearGradient id="logo2" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#8A5A33"/>
+      <stop offset="1" stop-color="#B07F4A"/>
+    </linearGradient>
+    <filter id="shadow2" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="0" dy="2" result="off"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.18"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1536" height="864" fill="url(#bg2)"/>
+
+  <!-- Top bar -->
+  <g filter="url(#shadow2)">
+    <rect x="48" y="40" width="1440" height="64" rx="14" fill="url(#bar2)" stroke="rgba(70,52,28,0.22)"/>
+    <rect x="64" y="56" width="32" height="32" rx="9" fill="url(#logo2)"/>
+    <text x="84" y="80" text-anchor="middle" font-family="serif" font-size="16" fill="#FBF7EC">📄</text>
+    <text x="112" y="78" font-family="Georgia, serif" font-size="20" font-weight="700" fill="#2A2620">DocuMind</text>
+    <rect x="1010" y="56" width="240" height="32" rx="8" fill="#EFE7D6" stroke="rgba(70,52,28,0.22)"/>
+    <text x="1026" y="76" font-family="Georgia, serif" font-size="12" fill="#2A2620">📄 ai-fluency-summary.pdf ▾</text>
+    <rect x="1290" y="56" width="86" height="32" rx="8" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+    <text x="1333" y="76" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#2A2620">📤 Upload</text>
+    <rect x="1386" y="56" width="86" height="32" rx="8" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+    <text x="1429" y="76" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#2A2620">📚 History</text>
+  </g>
+
+  <!-- Stat chips -->
+  <g transform="translate(48,128)">
+    <g><rect width="220" height="64" rx="12" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+      <text x="16" y="36" font-family="Georgia, serif" font-size="24" font-weight="800" fill="#8A5A33">5</text>
+      <text x="16" y="54" font-family="Georgia, serif" font-size="11" fill="#6B5F49" letter-spacing="2">PAGES</text>
+    </g>
+    <g transform="translate(240,0)"><rect width="240" height="64" rx="12" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+      <text x="16" y="36" font-family="Georgia, serif" font-size="24" font-weight="800" fill="#8A5A33">1,240</text>
+      <text x="16" y="54" font-family="Georgia, serif" font-size="11" fill="#6B5F49" letter-spacing="2">WORDS</text>
+    </g>
+    <g transform="translate(500,0)"><rect width="220" height="64" rx="12" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+      <text x="16" y="36" font-family="Georgia, serif" font-size="24" font-weight="800" fill="#8A5A33">12</text>
+      <text x="16" y="54" font-family="Georgia, serif" font-size="11" fill="#6B5F49" letter-spacing="2">CHUNKS</text>
+    </g>
+  </g>
+
+  <!-- User message -->
+  <g transform="translate(48,232)">
+    <rect width="1440" height="64" rx="16" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+    <circle cx="36" cy="32" r="16" fill="#EFE7D6"/>
+    <text x="36" y="38" text-anchor="middle" font-size="14">🧑</text>
+    <text x="68" y="40" font-family="Georgia, serif" font-size="15" fill="#2A2620">What are the 4D framework components?</text>
+  </g>
+
+  <!-- Assistant message -->
+  <g transform="translate(48,316)" filter="url(#shadow2)">
+    <rect width="1440" height="280" rx="16" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+    <circle cx="36" cy="36" r="16" fill="url(#logo2)"/>
+    <text x="36" y="42" text-anchor="middle" font-size="14" fill="#FBF7EC">📄</text>
+    <text x="68" y="42" font-family="Georgia, serif" font-size="14" fill="#6B5F49">DocuMind · 3 sources</text>
+
+    <g font-family="Georgia, serif" font-size="14" fill="#2A2620">
+      <text x="36" y="84">The 4D framework has four components:</text>
+      <text x="36" y="116"><tspan font-weight="700">1. Delegation</tspan> — assigning tasks to AI with clear scope and intent.</text>
+      <text x="36" y="144"><tspan font-weight="700">2. Description</tspan> — prompting AI with the context and constraints it needs.</text>
+      <text x="36" y="172"><tspan font-weight="700">3. Discernment</tspan> — evaluating AI outputs critically before acting on them.</text>
+      <text x="36" y="200"><tspan font-weight="700">4. Diligence</tspan> — using AI responsibly and verifying high-stakes answers.</text>
+      <text x="36" y="232" fill="#6B5F49" font-size="12">Source: ai-fluency-summary.pdf · p.2</text>
+    </g>
+  </g>
+
+  <!-- Sources panel -->
+  <g transform="translate(48,612)">
+    <rect width="1440" height="148" rx="16" fill="#EFE7D6" stroke="rgba(70,52,28,0.22)"/>
+    <text x="20" y="28" font-family="Georgia, serif" font-size="14" font-weight="700" fill="#2A2620">📎 Sources (3)</text>
+
+    <g transform="translate(20,44)">
+      <rect width="1400" height="28" rx="8" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+      <text x="12" y="19" font-family="Georgia, serif" font-size="12" fill="#2A2620" font-weight="700">1. ai-fluency-summary.pdf · p.2</text>
+      <text x="1380" y="19" text-anchor="end" font-family="Georgia, serif" font-size="12" fill="#8A5A33" font-weight="700">92% match</text>
+    </g>
+    <g transform="translate(20,76)">
+      <rect width="1400" height="28" rx="8" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+      <text x="12" y="19" font-family="Georgia, serif" font-size="12" fill="#2A2620" font-weight="700">2. ai-fluency-summary.pdf · p.3</text>
+      <text x="1380" y="19" text-anchor="end" font-family="Georgia, serif" font-size="12" fill="#8A5A33" font-weight="700">87% match</text>
+    </g>
+    <g transform="translate(20,108)">
+      <rect width="1400" height="28" rx="8" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+      <text x="12" y="19" font-family="Georgia, serif" font-size="12" fill="#2A2620" font-weight="700">3. ai-fluency-summary.pdf · p.4</text>
+      <text x="1380" y="19" text-anchor="end" font-family="Georgia, serif" font-size="12" fill="#8A5A33" font-weight="700">71% match</text>
+    </g>
+  </g>
+
+  <!-- Chat input bar -->
+  <g filter="url(#shadow2)" transform="translate(48,790)">
+    <rect width="1440" height="50" rx="14" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+    <text x="22" y="32" font-family="Georgia, serif" font-size="12" fill="#6B5F49">Ask a follow-up about ai-fluency-summary.pdf…</text>
+    <circle cx="1408" cy="25" r="14" fill="#8A5A33"/>
+    <text x="1408" y="30" text-anchor="middle" font-family="Georgia, serif" font-size="14" fill="#FBF7EC">↑</text>
+  </g>
+</svg>

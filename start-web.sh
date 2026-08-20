@@ -13,6 +13,13 @@ WORKERS="${WORKERS:-1}"
 
 cd "$(dirname "$0")"
 
+# Load persistent local config (e.g. DOCUMIND_CHAT_MODEL) so the model pull
+# below AND the uvicorn server both see the same settings. .env is gitignored,
+# so this is where your machine-specific model choice lives across restarts.
+if [ -f .env ]; then
+  set -a; . ./.env; set +a
+fi
+
 # Best-effort: start Ollama if it's installed and not already running.
 if command -v ollama >/dev/null 2>&1; then
   if ! curl -fsS "${DOCUMIND_OLLAMA_BASE_URL:-http://localhost:11434}/api/tags" >/dev/null 2>&1; then

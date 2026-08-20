@@ -2,7 +2,9 @@
 
 DocuMind ships with a small, dependency-free harness that measures both halves of
 a RAG system: **did retrieval find the right passages**, and **is the generated
-answer correct and grounded**.
+answer correct and grounded**. Generative answers (and the optional LLM judge)
+use your **local Ollama** chat model — the same persistent backend as
+`./start-web.sh`. No cloud API key paste is required.
 
 ## Metrics
 
@@ -48,20 +50,34 @@ underscores), e.g. `geography.pdf` → `geography_pdf`. See the sidebar's
 2. Run the harness:
 
 ```bash
-# all documents
-documind-eval --dataset eval/sample_dataset.json --out eval/report.json
+# all documents — persists under eval/runs/<UTC-timestamp>/
+documind-eval --dataset eval/sample_dataset.json
 
 # scope retrieval to a single document
 documind-eval --dataset eval/sample_dataset.json --source geography_pdf
 
 # also grade with the local LLM judge
 documind-eval --dataset eval/sample_dataset.json --judge
+
+# one-shot JSON only (skip run history)
+documind-eval --dataset eval/sample_dataset.json --no-persist --out eval/oneshot.json
 ```
 
-It prints a Markdown summary and, with `--out`, writes a full JSON report
-(per-question answers, retrieved sources, and all metrics).
+### Persisted run history
 
-`make eval` runs it against the bundled sample dataset.
+Every default run writes:
+
+| Path | Role |
+| --- | --- |
+| `eval/runs/<YYYYMMDD-HHMMSS>/report.json` | Full timestamped report |
+| `eval/runs/<YYYYMMDD-HHMMSS>/report.md` | Markdown summary (+ delta table) |
+| `eval/report.json` / `eval/report.md` | Always-updated “latest” mirror |
+
+When a previous run exists, the CLI prints a short **delta vs previous run**
+table (per-metric Δ). Run directories are gitignored; regenerate anytime with
+`make eval`.
+
+`make eval` runs the harness against `eval/datasets/realistic.json`.
 
 ## In CI / the cloud
 

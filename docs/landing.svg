@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1536 864" role="img" aria-label="DocuMind landing page screenshot">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#CDBC97"/>
+      <stop offset="1" stop-color="#BFAE89"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#FBF6EA"/>
+      <stop offset="1" stop-color="#F3EBD9"/>
+    </linearGradient>
+    <linearGradient id="logo" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#8A5A33"/>
+      <stop offset="1" stop-color="#B07F4A"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="0" dy="2" result="off"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.18"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Page background -->
+  <rect width="1536" height="864" fill="url(#bg)"/>
+
+  <!-- Top bar -->
+  <g filter="url(#shadow)">
+    <rect x="48" y="40" width="1440" height="64" rx="14" fill="url(#bar)" stroke="rgba(70,52,28,0.22)"/>
+    <rect x="64" y="56" width="32" height="32" rx="9" fill="url(#logo)"/>
+    <text x="84" y="80" text-anchor="middle" font-family="serif" font-size="16" fill="#FBF7EC" font-weight="700">📄</text>
+    <text x="112" y="78" font-family="Georgia, serif" font-size="20" font-weight="700" fill="#2A2620">DocuMind</text>
+    <text x="222" y="78" font-family="Georgia, serif" font-size="13" fill="#6B5F49">Local · Private · PDF Q&amp;A</text>
+
+    <!-- Right side buttons -->
+    <rect x="1290" y="56" width="86" height="32" rx="8" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+    <text x="1333" y="76" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#2A2620">📤 Upload</text>
+    <rect x="1386" y="56" width="86" height="32" rx="8" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+    <text x="1429" y="76" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#2A2620">📚 History</text>
+  </g>
+
+  <!-- Stat chips -->
+  <g transform="translate(48,140)">
+    <g><rect width="320" height="74" rx="12" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+      <text x="20" y="40" font-family="Georgia, serif" font-size="28" font-weight="800" fill="#8A5A33">0</text>
+      <text x="20" y="62" font-family="Georgia, serif" font-size="11" fill="#6B5F49" letter-spacing="2">DOCUMENTS</text>
+    </g>
+    <g transform="translate(360,0)"><rect width="320" height="74" rx="12" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+      <text x="20" y="40" font-family="Georgia, serif" font-size="28" font-weight="800" fill="#8A5A33">0</text>
+      <text x="20" y="62" font-family="Georgia, serif" font-size="11" fill="#6B5F49" letter-spacing="2">QUESTIONS ASKED</text>
+    </g>
+    <g transform="translate(720,0)"><rect width="320" height="74" rx="12" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+      <text x="20" y="40" font-family="Georgia, serif" font-size="28" font-weight="800" fill="#8A5A33">0</text>
+      <text x="20" y="62" font-family="Georgia, serif" font-size="11" fill="#6B5F49" letter-spacing="2">DOCS REFERENCED</text>
+    </g>
+  </g>
+
+  <!-- Empty state -->
+  <g transform="translate(768,420)" text-anchor="middle">
+    <text font-size="64" y="-20">📄</text>
+    <text font-family="Georgia, serif" font-size="32" font-weight="800" fill="#2A2620" y="40">Ask your documents anything.</text>
+    <text font-family="Georgia, serif" font-size="15" fill="#6B5F49" y="78">
+      <tspan x="0" dy="0">Drop a PDF in the chat and DocuMind will answer with citations —</tspan>
+      <tspan x="0" dy="22">nothing leaves this machine.</tspan>
+    </text>
+  </g>
+
+  <!-- Suggested question chips -->
+  <g transform="translate(48,720)">
+    <text x="0" y="-6" font-family="Georgia, serif" font-size="13" fill="#6B5F49">Try asking:</text>
+    <g><rect width="260" height="36" rx="18" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+      <text x="130" y="23" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#2A2620">Summarize this document in a few sentences.</text>
+    </g>
+    <g transform="translate(280,0)"><rect width="220" height="36" rx="18" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+      <text x="110" y="23" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#2A2620">What are the key points?</text>
+    </g>
+    <g transform="translate(520,0)"><rect width="280" height="36" rx="18" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+      <text x="140" y="23" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#2A2620">Are there any important dates or numbers?</text>
+    </g>
+    <g transform="translate(820,0)"><rect width="240" height="36" rx="18" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+      <text x="120" y="23" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#2A2620">What conclusions does it reach?</text>
+    </g>
+  </g>
+
+  <!-- Chat input bar -->
+  <g filter="url(#shadow)" transform="translate(48,790)">
+    <rect width="1440" height="50" rx="14" fill="#FBF7EC" stroke="rgba(70,52,28,0.22)"/>
+    <text x="22" y="32" font-family="Georgia, serif" font-size="12" fill="#6B5F49">📎 Ask DocuMind about your documents…</text>
+    <circle cx="1408" cy="25" r="14" fill="#8A5A33"/>
+    <text x="1408" y="30" text-anchor="middle" font-family="Georgia, serif" font-size="14" fill="#FBF7EC">↑</text>
+  </g>
+</svg>

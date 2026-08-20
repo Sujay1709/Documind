@@ -2,11 +2,12 @@
 
 Examples:
     documind-eval --dataset eval/sample_dataset.json
-    documind-eval --dataset eval/sample_dataset.json --source report_pdf --judge \\
-        --out eval/report.json
+    documind-eval --dataset eval/sample_dataset.json --source report_pdf --judge
+    documind-eval --dataset eval/sample_dataset.json --no-persist --out eval/oneshot.json
 
-The documents referenced by your dataset must already be indexed (upload them in
-the app, or via the ingestion API) and Ollama must be running.
+By default every run is written to ``eval/runs/<UTC-timestamp>/`` and mirrored
+to ``eval/report.{json,md}``. A delta table vs the previous run is printed when
+prior history exists. Generative answers require a running Ollama server.
 """
 
 from __future__ import annotations
@@ -16,7 +17,16 @@ import json
 import sys
 from pathlib import Path
 
-from .evaluation import EvalReport, evaluate_dataset, load_dataset
+from .evaluation import (
+    DEFAULT_LATEST_JSON,
+    DEFAULT_LATEST_MD,
+    DEFAULT_RUNS_DIR,
+    EvalReport,
+    evaluate_dataset,
+    format_aggregate_diff,
+    load_dataset,
+    persist_report,
+)
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -24,7 +34,21 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--dataset", required=True, help="Path to a JSON eval dataset.")
     p.add_argument("--source", default=None, help="Scope retrieval to this indexed document.")
     p.add_argument("--judge", action="store_true", help="Also score with the LLM judge.")
-    p.add_argument("--out", default=None, help="Write the full JSON report to this path.")
+    p.add_argument(
+        "--out",
+        default=None,
+        help="Optional extra path for the JSON report (in addition to the run history).",
+    )
+    p.add_argument(
+        "--runs-dir",
+        default=str(DEFAULT_RUNS_DIR),
+        help=f"Directory for timestamped runs (default: {DEFAULT_RUNS_DIR}).",
+    )
+    p.add_argument(
+        "--no-persist",
+        action="store_true",
+        help="Skip eval/runs/ history and only write --out if provided.",
+    )
     return p.parse_args(argv)
 
 
@@ -34,6 +58,22 @@ def run(argv: list[str] | None = None) -> EvalReport:
     report = evaluate_dataset(samples, source=args.source, use_llm_judge=args.judge)
 
     print(report.to_markdown())
+
+    if not args.no_persist:
+        saved = persist_report(
+            report,
+            runs_dir=args.runs_dir,
+            latest_json=DEFAULT_LATEST_JSON,
+            latest_md=DEFAULT_LATEST_MD,
+        )
+        print(f"\nPersisted run {saved['run_id']} → {saved['run_dir']}")
+        print(f"Latest mirror → {saved['latest_json']}")
+        if saved["previous"] and saved["diff"]:
+            print(f"Compared to previous run {saved['previous']}")
+            print()
+            print(format_aggregate_diff(saved["diff"]))
+        elif not saved["previous"]:
+            print("(No previous run to compare against.)")
 
     if args.out:
         out = Path(args.out)
