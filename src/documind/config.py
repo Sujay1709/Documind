@@ -92,6 +92,18 @@ class Settings(BaseSettings):
         le=2.0,
         description="Sampling temperature; low keeps grounded RAG answers factual.",
     )
+    llm_retries: int = Field(
+        default=2,
+        ge=0,
+        le=3,
+        description="Retries allowed when Ollama fails before the first output token.",
+    )
+    llm_retry_backoff_s: float = Field(
+        default=0.5,
+        ge=0.0,
+        le=10.0,
+        description="Initial delay between bounded Ollama startup retries.",
+    )
 
     # --- Embedding / indexing -------------------------------------------
     embed_batch_size: int = Field(

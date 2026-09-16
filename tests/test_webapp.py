@@ -10,8 +10,7 @@ from __future__ import annotations
 
 import io
 import json
-import os
-from pathlib import Path
+import re
 
 import pytest
 
@@ -91,22 +90,15 @@ def test_index_serves_spa(app_client):
 
 
 def test_static_assets_served(app_client):
-    # The webapp serves the legacy top-level static/ tree. New JS lives
-    # in static/js/, the legacy single-file app.js is kept for comparison.
-    css = app_client.get("/static/styles.css")
-    legacy = app_client.get("/static/js/app.js.legacy")
-    new_app = app_client.get("/static/js/app.js")
-    assert css.status_code == 200 and "dm-bar" in css.text
-    # The legacy single-file app.js is still served (so the test is
-    # checking the mount is wired). The new modular app.js is also
-    # served for the static-space deploy.
-    assert legacy.status_code == 200, "legacy app.js should still be served"
-    assert new_app.status_code == 200
-    # The new modular app.js delegates to rag-pipeline.js for the
-    # @huggingface/transformers imports. Check that file is served
-    # too — it's the load-bearing module for the static-space deploy.
-    rag = app_client.get("/static/js/rag-pipeline.js")
-    assert rag.status_code == 200 and "feature-extraction" in rag.text
+    # The React/Vite build is served from the generated static tree.
+    index = app_client.get("/static/index.html")
+    assert index.status_code == 200 and "DocuMind" in index.text
+    css_path = re.search(r'href="(/static/assets/[^"]+\.css)"', index.text).group(1)
+    js_path = re.search(r'src="(/static/assets/[^"]+\.js)"', index.text).group(1)
+    css = app_client.get(css_path)
+    js = app_client.get(js_path)
+    assert css.status_code == 200 and ".bar" in css.text
+    assert js.status_code == 200 and "DocuMind" in js.text
 
 
 def test_chat_without_question_is_400(app_client):
