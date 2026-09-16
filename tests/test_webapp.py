@@ -58,16 +58,16 @@ def stub_pipeline(monkeypatch):
     monkeypatch.setattr(pipeline, "rerank", _fake_rerank)
 
     def _fake_stream_chat(messages):
-        for tok in ("Hello", " world", "!"):
-            yield tok
+        yield from ("Hello", " world", "!")
 
     monkeypatch.setattr(llm, "stream_chat", _fake_stream_chat)
 
 
 @pytest.fixture
 def app_client(tmp_settings, stub_pipeline):
-    from documind.webapp import create_app
     from starlette.testclient import TestClient
+
+    from documind.webapp import create_app
 
     return TestClient(create_app())
 
@@ -155,8 +155,9 @@ def test_api_token_required_when_set(tmp_settings, monkeypatch, stub_pipeline):
 
     get_settings.cache_clear()
 
-    from documind.webapp import create_app
     from starlette.testclient import TestClient
+
+    from documind.webapp import create_app
 
     client = TestClient(create_app())
     r = client.post("/chat", json={"question": "hi"})
@@ -176,8 +177,9 @@ def test_rate_limit_returns_429(tmp_settings, monkeypatch, stub_pipeline):
 
     get_settings.cache_clear()
 
-    from documind.webapp import create_app
     from starlette.testclient import TestClient
+
+    from documind.webapp import create_app
 
     client = TestClient(create_app())
     client.post("/chat", json={"question": "hi"}, headers={"X-Forwarded-For": "1.2.3.4"})
@@ -200,8 +202,9 @@ def test_upload_by_path_requires_token(tmp_settings, monkeypatch, tmp_path):
 
     get_settings.cache_clear()
 
-    from documind.webapp import create_app
     from starlette.testclient import TestClient
+
+    from documind.webapp import create_app
 
     client = TestClient(create_app())
     r = client.post("/api/upload-by-path", json={"path": "uploads/missing.pdf"})
@@ -217,8 +220,9 @@ def test_upload_by_path_rejects_traversal(tmp_settings, monkeypatch, tmp_path, s
 
     get_settings.cache_clear()
 
-    from documind.webapp import create_app
     from starlette.testclient import TestClient
+
+    from documind.webapp import create_app
 
     client = TestClient(create_app())
     # Try to index something outside the upload dir. We don't need the file to
@@ -239,8 +243,9 @@ def test_upload_by_path_happy_path(tmp_settings, monkeypatch, tmp_path, stub_pip
 
     get_settings.cache_clear()
 
-    from documind.webapp import create_app
     from starlette.testclient import TestClient
+
+    from documind.webapp import create_app
 
     client = TestClient(create_app())
     r = client.post("/api/upload-by-path", json={"path": "hello.pdf"})

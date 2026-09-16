@@ -29,20 +29,18 @@ import logging
 import re
 import time
 from collections import deque
+from collections.abc import AsyncIterator, Iterable
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, AsyncIterator, Iterable
+from typing import Any
 
-import starlette
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import (
-    FileResponse,
     HTMLResponse,
     JSONResponse,
-    PlainTextResponse,
     Response,
     StreamingResponse,
 )
@@ -189,7 +187,7 @@ def _cap_tokens(stream: Iterable[str], cap: int) -> AsyncIterator[str]:
 
 async def _sse(data: dict) -> bytes:
     payload = json.dumps(data, ensure_ascii=False)
-    return f"data: {payload}\n\n".encode("utf-8")
+    return f"data: {payload}\n\n".encode()
 
 
 # --------------------------------------------------------------------------- #
@@ -373,8 +371,7 @@ async def chat_sse(request: Request) -> Response:
             # 2) Stream the LLM answer through Ollama. We borrow the same code
             #    path the Streamlit app uses (stream_chat), so behaviour and
             #    guardrails stay identical.
-            from .llm import stream_chat, _build_messages
-            from . import llm as _llm_mod
+            from .llm import _build_messages, stream_chat
 
             messages = _build_messages(retrieval.context, question, history_msgs)
             stream = stream_chat(messages)
@@ -611,7 +608,6 @@ app = create_app()
 def main() -> None:  # pragma: no cover - console entry only
     import uvicorn
 
-    settings = get_settings()
     uvicorn.run(
         "documind.webapp:app",
         host="0.0.0.0",

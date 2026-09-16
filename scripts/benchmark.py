@@ -17,7 +17,6 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from dataclasses import asdict
 from pathlib import Path
 
 # Allow running as `python scripts/benchmark.py` from the repo root.
@@ -26,7 +25,6 @@ sys.path.insert(0, str(_REPO / "src"))
 
 from documind.config import Settings  # noqa: E402
 from documind.evaluation import evaluate_dataset, load_dataset  # noqa: E402
-
 
 # A small, defensible grid. Each entry overrides Settings fields and re-evaluates
 # the same dataset. The defaults ("baseline") reflect the values committed to
@@ -78,8 +76,20 @@ def _run_one(name: str, overrides: dict, samples, base: Settings) -> dict:
 
 def to_markdown(rows: list[dict]) -> str:
     """Pretty side-by-side table for the README / report."""
-    keys = ["retrieval_hit", "retrieval_recall", "mrr", "answer_f1", "keyword_recall", "faithfulness"]
-    lines = ["# DocuMind benchmark", "", "| Config | " + " | ".join(keys) + " |", "| --- | " + " | ".join(["---"] * len(keys)) + " |"]
+    keys = [
+        "retrieval_hit",
+        "retrieval_recall",
+        "mrr",
+        "answer_f1",
+        "keyword_recall",
+        "faithfulness",
+    ]
+    lines = [
+        "# DocuMind benchmark",
+        "",
+        "| Config | " + " | ".join(keys) + " |",
+        "| --- | " + " | ".join(["---"] * len(keys)) + " |",
+    ]
     for r in rows:
         agg = r["aggregate"]
         cells = [f"{agg.get(k, 0):.3f}" for k in keys]
@@ -91,7 +101,11 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Compare DocuMind RAG configs.")
     p.add_argument("--dataset", required=True, help="JSON eval dataset.")
     p.add_argument("--out", default="eval/benchmark.json", help="Where to write the JSON report.")
-    p.add_argument("--markdown", default=None, help="Optional path to also write a Markdown summary.")
+    p.add_argument(
+        "--markdown",
+        default=None,
+        help="Optional path to also write a Markdown summary.",
+    )
     args = p.parse_args(argv)
 
     samples = load_dataset(args.dataset)
