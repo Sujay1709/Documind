@@ -1,6 +1,17 @@
 import { motion } from 'motion/react'
 
-export default function TopBar({ theme, onToggleTheme, docCount, hasToken, onAdmin }) {
+export default function TopBar({
+  theme,
+  onToggleTheme,
+  docCount,
+  docs,
+  activeSource,
+  onSelectSource,
+  docsLoading,
+  docsError,
+  hasToken,
+  onAdmin,
+}) {
   return (
     <motion.header
       className="bar glass"
@@ -15,10 +26,25 @@ export default function TopBar({ theme, onToggleTheme, docCount, hasToken, onAdm
       <div className="pill docs" title="Indexed documents on this server">
         📚 <b>{docCount}</b> docs
       </div>
+      {docs.length > 0 && (
+        <label className="doc-select">
+          <span className="sr-only">Search scope</span>
+          <select
+            value={activeSource || ''}
+            onChange={(e) => onSelectSource(e.target.value || null)}
+            aria-label="Choose a document to search"
+          >
+            <option value="">All documents</option>
+            {docs.map((doc) => <option key={doc} value={doc}>{doc}</option>)}
+          </select>
+        </label>
+      )}
+      {docsLoading && <span className="status-inline">Loading…</span>}
+      {docsError && <span className="status-inline error-inline" role="status">Server unavailable</span>}
       <button className="btn-ghost" type="button" onClick={onAdmin}>
         {hasToken ? 'Sign out' : 'Admin'}
       </button>
-      <button className="btn-ghost" type="button" onClick={onToggleTheme} title="Toggle theme">
+      <button className="btn-ghost" type="button" onClick={onToggleTheme} title="Toggle theme" aria-label="Toggle color theme">
         {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
       </button>
     </motion.header>

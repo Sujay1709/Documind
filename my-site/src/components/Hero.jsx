@@ -17,14 +17,14 @@ const item = {
   show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 200, damping: 22 } },
 }
 
-export default function Hero({ status, onFiles, onSuggest, disabledSuggest }) {
+export default function Hero({ status, onFiles, onSuggest, disabledSuggest, uploading }) {
   const inputRef = useRef(null)
   const [drag, setDrag] = useState(false)
 
   function handleDrop(e) {
     e.preventDefault()
     setDrag(false)
-    const files = Array.from(e.dataTransfer.files).filter((f) => f.type === 'application/pdf')
+    const files = Array.from(e.dataTransfer.files).filter((f) => f.type === 'application/pdf' || /\.pdf$/i.test(f.name))
     if (files.length) onFiles(files)
   }
 
@@ -51,8 +51,8 @@ export default function Hero({ status, onFiles, onSuggest, disabledSuggest }) {
         <motion.div className="icon" animate={{ y: [0, -5, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>
           ⤵
         </motion.div>
-        <button className="btn-primary" type="button" onClick={() => inputRef.current?.click()}>
-          Choose PDF
+        <button className="btn-primary" type="button" disabled={uploading} onClick={() => inputRef.current?.click()}>
+          {uploading ? 'Indexing…' : 'Choose PDF'}
         </button>
         <input
           ref={inputRef}
@@ -60,6 +60,7 @@ export default function Hero({ status, onFiles, onSuggest, disabledSuggest }) {
           accept="application/pdf"
           hidden
           multiple
+          disabled={uploading}
           onChange={(e) => {
             const files = Array.from(e.target.files || [])
             if (files.length) onFiles(files)
