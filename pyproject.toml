@@ -41,8 +41,8 @@ documind-raft = "documind.raft_cli:main"
 documind-web = "documind.webapp:main"
 
 [project.urls]
-Homepage = "https://github.com/Sujay1709/documind-rag"
-Repository = "https://github.com/Sujay1709/documind-rag"
+Homepage = "https://github.com/Sujay1709/Documind"
+Repository = "https://github.com/Sujay1709/Documind"
 
 [tool.setuptools.packages.find]
 where = ["src"]

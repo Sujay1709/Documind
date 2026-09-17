@@ -132,7 +132,7 @@ in IndexedDB on the visitor's machine.
    - **SDK: Static** → *Blank* template · Hardware: *Static (free)* → **Create Space**
 
 2. **Push the bundle.** A Static Space is a git repo with `index.html` at
-   the root. The cleanest path is to push the contents of `deploy/hf-spaces-static/`:
+   the root. The cleanest path is to push the contents of `deploy/hf-spaces/`:
 
    ```bash
    # clone your new (empty) Space
@@ -140,7 +140,7 @@ in IndexedDB on the visitor's machine.
    cd documind
 
    # copy the SPA from this repo
-   cp -r ../rag-app/deploy/hf-spaces-static/* .
+   cp -r deploy/hf-spaces/* .
 
    git add -A
    git commit -m "Deploy DocuMind static SPA"
@@ -173,7 +173,7 @@ in IndexedDB on the visitor's machine.
 
 ### Self-host (any static host)
 
-The bundle is plain static files. Drop the `deploy/hf-spaces-static/`
+The application is a Docker-backed web service. Use the `deploy/hf-spaces/`
 contents into Netlify, Vercel, GitHub Pages, S3+CloudFront, or a
 USB stick. Same code, same behavior. CORS is not an issue because
 the Groq call is browser-direct.
@@ -221,7 +221,7 @@ never commit tokens or embed them in a URL.
    cd documind
 
    # copy the app from your GitHub checkout (adjust the path)
-   cp -r ~/rag-app/* ~/rag-app/.streamlit ~/rag-app/.gitignore .
+   cp -r /path/to/Documind/* /path/to/Documind/.streamlit /path/to/Documind/.gitignore .
 
    # HF needs the Dockerfile and README at the repo ROOT:
    cp deploy/hf-spaces/Dockerfile ./Dockerfile
