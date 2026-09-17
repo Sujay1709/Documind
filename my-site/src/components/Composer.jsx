@@ -39,7 +39,7 @@ export default function Composer({ activeSource, onClearSource, onSend, busy }) 
             exit={{ opacity: 0, y: 8 }}
           >
             <span>📄 <b>{activeSource}</b></span>
-            <button type="button" title="Ask across all docs" onClick={onClearSource}>✕</button>
+            <button type="button" title="Ask across all docs" aria-label="Ask across all documents" onClick={onClearSource}>✕</button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -59,6 +59,7 @@ export default function Composer({ activeSource, onClearSource, onSend, busy }) 
           whileHover={{ scale: busy ? 1 : 1.06 }}
           whileTap={{ scale: 0.94 }}
           title="Send (Enter)"
+          aria-label={busy ? 'Sending question' : 'Send question'}
         >
           ➤
         </motion.button>

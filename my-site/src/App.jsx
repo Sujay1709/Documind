@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import Background3D from './components/Background3D.jsx'
 import TopBar from './components/TopBar.jsx'
 import Hero from './components/Hero.jsx'
 import Chat from './components/Chat.jsx'
@@ -14,12 +13,15 @@ function now() {
 export default function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('documind:theme') || 'dark')
   const [docs, setDocs] = useState([])
+  const [docsLoading, setDocsLoading] = useState(true)
+  const [docsError, setDocsError] = useState('')
   const [activeSource, setActiveSource] = useState(null)
   const [messages, setMessages] = useState([])
   const [started, setStarted] = useState(false)
   const [busy, setBusy] = useState(false)
   const [hasToken, setHasToken] = useState(!!getToken())
   const [uploadStatus, setUploadStatus] = useState('No file selected.')
+  const [uploading, setUploading] = useState(false)
   const idc = useRef(0)
   const nextId = () => `m${++idc.current}`
 
@@ -32,7 +34,15 @@ export default function App() {
   }, [theme])
 
   const refreshDocs = useCallback(async () => {
-    setDocs(await fetchSources())
+    setDocsLoading(true)
+    try {
+      setDocs(await fetchSources())
+      setDocsError('')
+    } catch (e) {
+      setDocsError(String(e.message || e))
+    } finally {
+      setDocsLoading(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -43,6 +53,8 @@ export default function App() {
 
   const handleFiles = useCallback(
     async (files) => {
+      if (uploading) return
+      setUploading(true)
       setUploadStatus(`Uploading ${files.map((f) => f.name).join(', ')}…`)
       try {
         const processed = await uploadFiles(files)
@@ -53,9 +65,11 @@ export default function App() {
         await refreshDocs()
       } catch (e) {
         setUploadStatus(`<span class="err">${escapeHtml(String(e.message || e))}</span>`)
+      } finally {
+        setUploading(false)
       }
     },
-    [refreshDocs],
+    [refreshDocs, uploading],
   )
 
   const sendQuestion = useCallback(
@@ -120,18 +134,26 @@ export default function App() {
   // Drag a PDF anywhere to index it, even mid-conversation.
   function onDrop(e) {
     e.preventDefault()
-    const files = Array.from(e.dataTransfer.files).filter((f) => f.type === 'application/pdf')
+    const files = Array.from(e.dataTransfer.files).filter((f) => f.type === 'application/pdf' || /\.pdf$/i.test(f.name))
     if (files.length) handleFiles(files)
   }
 
   return (
     <div className="root-wrap" onDragOver={(e) => e.preventDefault()} onDrop={onDrop}>
-      <Background3D theme={theme} />
+      <div className="ambient" aria-hidden="true">
+        <div className="ambient-grid" />
+        <div className="ambient-orbit" />
+      </div>
       <div className="app">
         <TopBar
           theme={theme}
           onToggleTheme={toggleTheme}
           docCount={docs.length}
+          docs={docs}
+          activeSource={activeSource}
+          onSelectSource={setActiveSource}
+          docsLoading={docsLoading}
+          docsError={docsError}
           hasToken={hasToken}
           onAdmin={handleAdmin}
         />
@@ -143,7 +165,8 @@ export default function App() {
               status={uploadStatus}
               onFiles={handleFiles}
               onSuggest={sendQuestion}
-              disabledSuggest={busy}
+              disabledSuggest={busy || uploading || Boolean(docsError)}
+              uploading={uploading}
             />
           )}
         </main>
@@ -151,7 +174,7 @@ export default function App() {
           activeSource={activeSource}
           onClearSource={() => setActiveSource(null)}
           onSend={sendQuestion}
-          busy={busy}
+          busy={busy || uploading || Boolean(docsError)}
         />
       </div>
     </div>

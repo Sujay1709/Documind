@@ -12,8 +12,6 @@ import json
 import urllib.error
 from pathlib import Path
 
-import pytest
-
 _REPO = Path(__file__).resolve().parent.parent
 _SCRIPT = _REPO / "scripts" / "smoke_webapp.py"
 

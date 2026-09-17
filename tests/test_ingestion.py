@@ -16,12 +16,26 @@ def test_split_documents_tags_source_and_chunks():
     assert len(chunks) > 1  # long text should split into multiple chunks
     assert all(c.metadata["source"] == "doc_pdf" for c in chunks)
     assert all("page" in c.metadata for c in chunks)
+    assert all("section_id" in c.metadata for c in chunks)
+    assert all("section_title" in c.metadata for c in chunks)
     # Chunks are sequentially indexed for clean ordering/citation.
     assert [c.metadata["chunk_index"] for c in chunks] == list(range(len(chunks)))
 
 
 def test_split_documents_empty_input():
     assert split_documents([], source_name="empty_pdf") == []
+
+
+def test_split_documents_preserves_section_metadata():
+    docs = [
+        Document(
+            page_content="A sufficiently long section body " * 3,
+            metadata={"page": 2, "section_id": "intro", "section_title": "Introduction"},
+        )
+    ]
+    chunks = split_documents(docs, source_name="d_pdf")
+    assert chunks[0].metadata["section_id"] == "intro"
+    assert chunks[0].metadata["section_title"] == "Introduction"
 
 
 def test_clean_normalises_whitespace():

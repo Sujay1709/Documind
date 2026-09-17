@@ -44,6 +44,7 @@ def _sources_from_chunks(chunks: list[RankedChunk]) -> list[dict]:
         {
             "source": c.metadata.get("source", "unknown"),
             "page": c.metadata.get("page"),
+            "section": c.metadata.get("section_title"),
             "score": round(float(c.score), 4),
             "snippet": c.text[:500],
         }

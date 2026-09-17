@@ -17,14 +17,10 @@ function authHeaders() {
 }
 
 export async function fetchSources() {
-  try {
-    const r = await fetch('/api/sources', { headers: authHeaders() })
-    if (!r.ok) return []
-    const data = await r.json()
-    return data.sources || []
-  } catch {
-    return []
-  }
+  const r = await fetch('/api/sources', { headers: authHeaders() })
+  const data = await r.json().catch(() => ({}))
+  if (!r.ok) throw new Error(data.error || `Could not load documents (HTTP ${r.status})`)
+  return data.sources || []
 }
 
 export async function uploadFiles(files) {

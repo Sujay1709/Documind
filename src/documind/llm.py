@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from collections.abc import Iterator
 
 import ollama
@@ -31,7 +32,13 @@ SYSTEM_PROMPT = (
     "details as short paragraphs or bullet points when there are multiple parts. "
     "When the answer is a sequence — a table of contents, chapters, or steps — "
     "preserve the document's original order.\n"
-    "7. Cite the source file and page for the facts you use. Do not invent facts, "
+    "7. Before the answer, include one or more short verbatim supporting quotes using "
+    "the format `Evidence: \"...\"`. Only quote text that appears in CONTEXT.\n"
+    "8. Then write `Answer:` followed by the concise answer. If CONTEXT does not "
+    "support the answer, write `Evidence: None found in the provided documents.` and "
+    "then `Answer: I don't know based on the provided documents.` Do not infer an "
+    "answer from the question alone.\n"
+    "9. Cite the source file and page for the facts you use. Do not invent facts, "
     "sources, or page numbers."
 )
 
@@ -72,20 +79,41 @@ def stream_chat(messages: list[dict]) -> Iterator[str]:
     """
     settings = get_settings()
     client = ollama.Client(host=settings.ollama_base_url)
-    response = client.chat(
-        model=settings.chat_model,
-        stream=True,
-        messages=messages,
-        options={
-            "num_ctx": settings.num_ctx,
-            "num_predict": settings.max_output_tokens,
-            "temperature": settings.temperature,
-        },
-    )
-    for chunk in response:
-        content = chunk.get("message", {}).get("content")
-        if content:
-            yield content
+    options = {
+        "num_ctx": settings.num_ctx,
+        "num_predict": settings.max_output_tokens,
+        "temperature": settings.temperature,
+    }
+    for attempt in range(settings.llm_retries + 1):
+        emitted = False
+        try:
+            response = client.chat(
+                model=settings.chat_model,
+                stream=True,
+                messages=messages,
+                options=options,
+            )
+            for chunk in response:
+                content = chunk.get("message", {}).get("content")
+                if content:
+                    emitted = True
+                    yield content
+            if emitted:
+                return
+            raise RuntimeError("Ollama returned an empty response")
+        except Exception as exc:
+            if emitted or attempt >= settings.llm_retries:
+                logger.error("LLM stream failed after %d attempt(s): %s", attempt + 1, exc)
+                raise
+            delay = settings.llm_retry_backoff_s * (2**attempt)
+            logger.warning(
+                "LLM stream failed before first token; retrying in %.1fs (%d/%d): %s",
+                delay,
+                attempt + 1,
+                settings.llm_retries,
+                exc,
+            )
+            time.sleep(delay)
 
 
 def stream_answer(

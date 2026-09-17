@@ -2,6 +2,7 @@
 
 from documind import pipeline, vectorstore
 from documind.config import get_settings
+from documind.reranker import RankedChunk
 
 
 def test_retrieve_handles_empty_store(monkeypatch):
@@ -32,8 +33,6 @@ def test_retrieve_reranks_and_builds_context(monkeypatch):
     }
     monkeypatch.setattr(vectorstore, "query", lambda *a, **k: fake)
 
-    from documind.reranker import RankedChunk
-
     def fake_rerank(query, documents, metadatas=None, top_k=None):
         return [
             RankedChunk(text=documents[1], metadata=metadatas[1], score=0.9),
@@ -47,3 +46,31 @@ def test_retrieve_reranks_and_builds_context(monkeypatch):
     assert len(result.chunks) == 2
     assert result.chunks[0].text == "beta chunk"
     assert "beta chunk" in result.context and "alpha chunk" in result.context
+
+
+def test_hierarchy_groups_pages_before_document_order():
+    chunks = [
+        RankedChunk(
+            "late", {"source": "a", "page": 2, "section_id": "s2", "chunk_index": 2}, 0.95
+        ),
+        RankedChunk(
+            "early", {"source": "a", "page": 0, "section_id": "s0", "chunk_index": 0}, 0.80
+        ),
+        RankedChunk(
+            "sibling", {"source": "a", "page": 2, "section_id": "s2", "chunk_index": 3}, 0.70
+        ),
+    ]
+    selected = pipeline.group_and_rank_chunks(chunks, top_k=2)
+    assert [chunk.text for chunk in selected] == ["late", "sibling"]
+    ordered = sorted(selected, key=pipeline._document_order)
+    assert [chunk.text for chunk in ordered] == ["late", "sibling"]
+
+
+def test_hierarchy_falls_back_to_page_grouping():
+    chunks = [
+        RankedChunk("p1b", {"source": "a", "page": 1, "chunk_index": 2}, 0.8),
+        RankedChunk("p1a", {"source": "a", "page": 1, "chunk_index": 1}, 0.7),
+        RankedChunk("p0", {"source": "a", "page": 0, "chunk_index": 0}, 0.6),
+    ]
+    selected = pipeline.group_and_rank_chunks(chunks, top_k=2)
+    assert {chunk.text for chunk in selected} == {"p1a", "p1b"}

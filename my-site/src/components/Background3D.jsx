@@ -65,7 +65,7 @@ function DocPanel({ p, r, s, speed, theme }) {
   )
 }
 
-function Scene({ theme }) {
+function Scene({ theme, compact }) {
   const group = useRef()
   useFrame((state, delta) => {
     if (!group.current) return
@@ -85,11 +85,11 @@ function Scene({ theme }) {
       <pointLight position={[6, -3, 1]} intensity={80} color={theme.light2} distance={30} decay={2} />
       <pointLight position={[0, 4, -4]} intensity={60} color={theme.light3} distance={30} decay={2} />
       <group ref={group}>
-        {PANELS.map((cfg, i) => (
+        {PANELS.slice(0, compact ? 3 : PANELS.length).map((cfg, i) => (
           <DocPanel key={i} {...cfg} theme={theme} />
         ))}
       </group>
-      <Sparkles count={140} scale={[16, 9, 7]} size={2.2} speed={0.3} opacity={0.55} color={theme.spark} />
+      <Sparkles count={compact ? 45 : 140} scale={[16, 9, 7]} size={compact ? 1.6 : 2.2} speed={0.3} opacity={0.55} color={theme.spark} />
     </>
   )
 }
@@ -98,6 +98,10 @@ export default function Background3D({ theme = 'dark' }) {
   const t = THEMES[theme] || THEMES.dark
   const reduced = useMemo(
     () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
+    [],
+  )
+  const compact = useMemo(
+    () => typeof window !== 'undefined' && window.matchMedia?.('(max-width: 720px)').matches,
     [],
   )
   // Pause rendering when the tab is hidden to save battery/GPU.
@@ -114,11 +118,11 @@ export default function Background3D({ theme = 'dark' }) {
     <div className="bg3d" aria-hidden="true">
       <Canvas
         camera={{ position: [0, 0, 7], fov: 50 }}
-        dpr={[1, 1.75]}
+        dpr={compact ? [1, 1.25] : [1, 1.75]}
         frameloop={frameloop}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
       >
-        <Scene theme={t} />
+        <Scene theme={t} compact={compact} />
         <AdaptiveDpr pixelated />
       </Canvas>
     </div>

@@ -70,14 +70,14 @@ def main() -> int:
     if code != 400:
         failures.append(f"/chat empty: status {code}, expected 400")
     else:
-        print(f"✓ /chat empty question -> 400")
+        print("✓ /chat empty question -> 400")
 
     # /api/chat without a question must 400.
     code, body = _post(f"{base}/api/chat", {})
     if code != 400:
         failures.append(f"/api/chat empty: status {code}, expected 400")
     else:
-        print(f"✓ /api/chat empty body -> 400")
+        print("✓ /api/chat empty body -> 400")
 
     # /: SPA HTML.
     code, body = _get_raw(f"{base}/")
