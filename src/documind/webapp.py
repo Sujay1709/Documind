@@ -58,8 +58,6 @@ _STATIC_DIR = Path(__file__).parent / "webapp" / "static"
 _INDEX_HTML = (_STATIC_DIR / "index.html").read_text(encoding="utf-8")
 # Hard cap on a single request body (covers the 500 MB PDF ceiling defined in
 # .streamlit/config.toml; the API actually enforces a tighter cap per request).
-_MAX_UPLOAD_BYTES = 500 * 1024 * 1024
-
 # A request-id used in the audit log so we can trace a visitor end-to-end.
 _REQ_ID_RE = re.compile(r"[^a-zA-Z0-9._-]+")
 
@@ -70,8 +68,9 @@ _REQ_ID_RE = re.compile(r"[^a-zA-Z0-9._-]+")
 class RateLimiter:
     """Simple in-memory sliding window keyed by visitor id."""
 
-    def __init__(self, max_per_min: int) -> None:
-        self._max = max_per_min
+    def __init__(self, max_per_window: int, window_s: float = 60.0) -> None:
+        self._max = max_per_window
+        self._window_s = window_s
         self._hits: dict[str, deque[float]] = {}
 
     def check(self, key: str) -> tuple[bool, int]:
@@ -79,7 +78,7 @@ class RateLimiter:
         if self._max <= 0:
             return True, 0
         now = time.monotonic()
-        window = 60.0
+        window = self._window_s
         bucket = self._hits.setdefault(key, deque())
         # Drop entries older than the window.
         while bucket and now - bucket[0] > window:
@@ -88,6 +87,23 @@ class RateLimiter:
             return False, 0
         bucket.append(now)
         return True, self._max - len(bucket)
+
+
+def _directory_size(path: Path) -> int:
+    if not path.exists():
+        return 0
+    return sum(item.stat().st_size for item in path.rglob("*") if item.is_file())
+
+
+def _model_name_matches(configured: str, available: set[str]) -> bool:
+    """Accept Ollama's implicit ``:latest`` tag in model listings."""
+    configured_base = configured.removesuffix(":latest")
+    return any(
+        name == configured
+        or name == configured_base
+        or name.removesuffix(":latest") == configured_base
+        for name in available
+    )
 
 
 def _client_id(request: Request) -> str:
@@ -198,27 +214,51 @@ async def index(request: Request) -> Response:
 
 
 async def healthz(request: Request) -> Response:
-    """Liveness + model liveness probe. Used by HF Spaces / Docker / k8s."""
+    """Lightweight process liveness probe."""
+    settings = get_settings()
+    return JSONResponse(
+        {
+            "status": "ok",
+            "ollama": None,
+            "chroma": None,
+            "models": {
+                "chat": settings.chat_model,
+                "embedding": settings.embedding_model,
+                "reranker": settings.reranker_model,
+            },
+        }
+    )
+
+
+async def readyz(request: Request) -> Response:
+    """Readiness probe for the vector store and configured Ollama models."""
     settings = get_settings()
     ollama_ok = True
     chroma_ok = True
+    models_ok = True
     try:
         import ollama  # local import keeps the module test-friendly
-        ollama.Client(host=settings.ollama_base_url).list()
+        models = ollama.Client(host=settings.ollama_base_url).list()
+        names = {item.get("name", "") for item in models.get("models", [])}
+        models_ok = _model_name_matches(settings.chat_model, names) and _model_name_matches(
+            settings.embedding_model, names
+        )
     except Exception as exc:
         ollama_ok = False
+        models_ok = False
         logger.warning("healthz: ollama unreachable: %s", exc)
     try:
         vectorstore.get_collection().count()  # type: ignore[attr-defined]
     except Exception as exc:
         chroma_ok = False
         logger.warning("healthz: chroma unreachable: %s", exc)
-    code = 200 if ollama_ok and chroma_ok else 503
+    code = 200 if ollama_ok and chroma_ok and models_ok else 503
     return JSONResponse(
         {
-            "status": "ok" if code == 200 else "degraded",
+            "status": "ready" if code == 200 else "not_ready",
             "ollama": ollama_ok,
             "chroma": chroma_ok,
+            "models_ready": models_ok,
             "models": {
                 "chat": settings.chat_model,
                 "embedding": settings.embedding_model,
@@ -242,13 +282,17 @@ async def upload(request: Request) -> Response:
     if not _check_token(request):
         return _bad_request("invalid or missing X-Documind-Token", code=401)
 
-    content_length = request.headers.get("content-length")
-    if content_length and content_length.isdigit() and int(content_length) > _MAX_UPLOAD_BYTES:
-        return _bad_request(
-            f"upload too large (>{_MAX_UPLOAD_BYTES // (1024 * 1024)} MB)", code=413
-        )
-
     settings = get_settings()
+    content_length = request.headers.get("content-length")
+    max_upload_bytes = settings.public_upload_mb * 1024 * 1024
+    if content_length and content_length.isdigit() and int(content_length) > max_upload_bytes:
+        return _bad_request(
+            f"upload too large (>{settings.public_upload_mb} MB)", code=413
+        )
+    upload_limiter: RateLimiter = request.app.state.upload_limiter
+    allowed, _ = upload_limiter.check(_client_id(request))
+    if not allowed:
+        return _bad_request("upload rate limit exceeded; try again later", code=429)
     # Keep the body in memory for simplicity (uploads are streamed by uvicorn).
     # Multipart parsing raises on malformed input, which Starlette maps to 400.
     try:
@@ -270,10 +314,14 @@ async def upload(request: Request) -> Response:
         data = await upload_file.read()
         if not data:
             continue
-        if len(data) > _MAX_UPLOAD_BYTES:
+        if len(data) > max_upload_bytes:
             return _bad_request(
-                f"{upload_file.filename!r} exceeds size limit", code=413
+                f"{upload_file.filename!r} exceeds {settings.public_upload_mb} MB limit", code=413
             )
+        current_bytes = _directory_size(settings.persist_dir)
+        max_bytes = settings.max_indexed_storage_mb * 1024 * 1024
+        if current_bytes + len(data) > max_bytes:
+            return _bad_request("indexed storage limit reached; reset demo data first", code=413)
         name = normalize_name(upload_file.filename or "uploaded.pdf")
         try:
             chunks = process_pdf_bytes(data, source_name=name, settings=settings)
@@ -482,9 +530,9 @@ async def upload_by_path(request: Request) -> Response:
         )
     if not target.exists() or not target.is_file():
         return _bad_request(f"file not found: {target}", code=404)
-    if target.stat().st_size > _MAX_UPLOAD_BYTES:
+    if target.stat().st_size > settings.public_upload_mb * 1024 * 1024:
         return _bad_request(
-            f"file too large (>{_MAX_UPLOAD_BYTES // (1024*1024)} MB)", code=413
+            f"file too large (>{settings.public_upload_mb} MB)", code=413
         )
 
     name = normalize_name(target.name)
@@ -536,6 +584,20 @@ async def get_summary(request: Request) -> Response:
 
 async def list_history(request: Request) -> Response:
     return JSONResponse({"entries": [asdict(e) for e in history.load()[:50]]})
+
+
+async def reset_data(request: Request) -> Response:
+    settings = get_settings()
+    if not settings.api_token or not _check_token(request):
+        return _bad_request("reset requires X-Documind-Token", code=401)
+    vectorstore.reset()
+    history.clear(settings)
+    summary.clear(settings)
+    audit = _audit_path(settings)
+    if audit.exists():
+        audit.unlink()
+    _audit("reset", ip=_client_id(request))
+    return JSONResponse({"reset": True})
 
 
 async def chat_post_ndjson(request: Request) -> Response:
@@ -596,9 +658,11 @@ def create_app(settings: Settings | None = None) -> Starlette:
         routes=[
             Route("/", endpoint=index, methods=["GET"]),
             Route("/healthz", endpoint=healthz, methods=["GET"]),
+            Route("/readyz", endpoint=readyz, methods=["GET"]),
             Route("/api/sources", endpoint=list_sources, methods=["GET"]),
             Route("/api/summary/{source}", endpoint=get_summary, methods=["GET"]),
             Route("/api/history", endpoint=list_history, methods=["GET"]),
+            Route("/api/reset", endpoint=reset_data, methods=["POST"]),
             Route("/upload", endpoint=upload, methods=["POST"]),
             Route("/chat", endpoint=chat_sse, methods=["POST"]),
             Route("/api/chat", endpoint=chat_post_ndjson, methods=["POST"]),
@@ -608,6 +672,7 @@ def create_app(settings: Settings | None = None) -> Starlette:
     )
     app.state.settings = settings
     app.state.limiter = RateLimiter(settings.rate_limit_per_min)
+    app.state.upload_limiter = RateLimiter(3, window_s=3600)
     return app
 
 

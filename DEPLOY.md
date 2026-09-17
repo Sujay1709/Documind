@@ -20,15 +20,18 @@ evidence-first guardrail prompt. The only difference is the HTTP transport.
 - **Long-running process** — one Ollama client, one Chroma collection, one cross-encoder in memory. No re-loads.
 - **SSE chat stream** — `/chat` pushes a `sources` event, then `token` events, then a `done` event. The browser renders as tokens arrive.
 - **PDF upload** — `/upload` accepts one or more PDFs in a single multipart request and indexes them on the spot.
-- **Visitor rate limit** — `DOCUMIND_RATE_LIMIT_PER_MIN` caps requests per IP (or first hop in `X-Forwarded-For`). Default `20`; `0` disables.
+- **Visitor rate limit** — `DOCUMIND_RATE_LIMIT_PER_MIN` caps requests per IP (or first hop in `X-Forwarded-For`). Default `10`; `0` disables.
 - **Optional API token** — set `DOCUMIND_API_TOKEN` to require `X-Documind-Token` on `/upload` and `/chat`. Useful when you don't want anonymous traffic.
-- **Health probe** — `/healthz` returns 200 if both Ollama and Chroma are reachable, 503 otherwise. The Dockerfile's `HEALTHCHECK` uses it.
+- **Health probe** — `/healthz` is a lightweight process liveness check. The Dockerfile's `HEALTHCHECK` uses it.
+- **Readiness probe** — `/readyz` verifies Chroma, Ollama, and both configured models; use it for traffic routing after startup.
 - **Audit log** — every upload, chat start, chat end, and error is appended to `.documind/audit.log` as JSON lines.
 - **Failure-safe generation** — Ollama startup failures are retried before the first
   token; partial streams are not silently retried or duplicated. Client-facing errors
   are generic while detailed causes remain in the server log.
 - **Evidence-first answers** — the model must emit a verbatim `Evidence:` quote and
   an `Answer:`. If the retrieved context is insufficient, it must abstain.
+- **Demo reset** — `POST /api/reset` requires `X-Documind-Token` and clears indexed
+  documents, history, summaries, and audit data.
 
 ## Endpoints
 
@@ -50,10 +53,12 @@ evidence-first guardrail prompt. The only difference is the HTTP transport.
 | Variable | Default | Notes |
 |----------|---------|-------|
 | `DOCUMIND_API_TOKEN` | _empty_ | If set, requests must send `X-Documind-Token`. |
-| `DOCUMIND_RATE_LIMIT_PER_MIN` | `20` | Per-visitor chat cap; `0` disables. |
+| `DOCUMIND_RATE_LIMIT_PER_MIN` | `10` | Per-visitor chat cap; `0` disables. |
 | `DOCUMIND_SUMMARIZE_ON_UPLOAD` | `true` | Disable to skip the post-upload LLM pass. |
 | `DOCUMIND_MAX_ANSWER_TOKENS` | `1500` | Char cap (×4) per streamed answer. |
 | `DOCUMIND_UPLOAD_DIR` | `./uploads` | Admin path-upload reads from this dir only. |
+| `DOCUMIND_PUBLIC_UPLOAD_MB` | `100` | Per-file upload cap for the public demo. |
+| `DOCUMIND_MAX_INDEXED_STORAGE_MB` | `500` | Approximate Chroma storage cap. |
 | `DOCUMIND_OLLAMA_BASE_URL` | `http://localhost:11434` | Where Ollama listens; set this to an external Ollama-compatible endpoint for hosted inference. |
 | `DOCUMIND_CHAT_MODEL` | `llama3.2:3b` | Pulled on boot. |
 | `DOCUMIND_EMBEDDING_MODEL` | `nomic-embed-text` | Pulled on boot. |

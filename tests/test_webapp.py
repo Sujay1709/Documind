@@ -82,6 +82,14 @@ def test_healthz_shape(app_client):
     assert "models" in body
 
 
+def test_readyz_shape(app_client):
+    r = app_client.get("/readyz")
+    assert r.status_code in (200, 503)
+    body = r.json()
+    assert body["status"] in ("ready", "not_ready")
+    assert "models_ready" in body
+
+
 def test_index_serves_spa(app_client):
     r = app_client.get("/")
     assert r.status_code == 200
@@ -169,6 +177,11 @@ def test_api_token_required_when_set(tmp_settings, monkeypatch, stub_pipeline):
         headers={"X-Documind-Token": "secret123"},
     )
     assert r.status_code != 401
+
+
+def test_reset_requires_token(app_client):
+    r = app_client.post("/api/reset")
+    assert r.status_code == 401
 
 
 def test_rate_limit_returns_429(tmp_settings, monkeypatch, stub_pipeline):

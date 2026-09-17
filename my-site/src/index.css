@@ -58,6 +58,10 @@ a { color: var(--accent); }
 .chip { border: 1px solid var(--border); border-radius: 999px; padding: 8px 13px; color: var(--text); background: var(--surface-muted); cursor: pointer; }
 .chip:hover { border-color: var(--border-strong); color: var(--accent); }
 .thread { display: flex; flex-direction: column; gap: 14px; }
+.indexed-notice { display: flex; flex-direction: column; gap: 3px; padding: 18px; border: 1px solid var(--border-strong); background: var(--accent-soft); }
+.indexed-notice strong { color: var(--accent); }
+.indexed-notice span { color: var(--muted); font-size: .86rem; }
+.btn-ghost.danger { color: var(--error, #ffb4a2); }
 .msg { padding: 16px 18px; border: 1px solid var(--border); border-radius: 16px; background: var(--bubble-bot); box-shadow: var(--shadow); }
 .msg.user { background: var(--bubble-user); border-color: var(--border-strong); }
 .msg-head { display: flex; gap: 9px; margin-bottom: 7px; }

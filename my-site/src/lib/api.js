@@ -43,6 +43,13 @@ export async function indexByPath(path) {
   return data.processed || []
 }
 
+export async function resetData() {
+  const r = await fetch('/api/reset', { method: 'POST', headers: authHeaders() })
+  const data = await r.json().catch(() => ({}))
+  if (!r.ok) throw new Error(data.error || `Reset failed (HTTP ${r.status})`)
+  return data
+}
+
 /**
  * Stream a grounded answer over Server-Sent Events.
  * The backend emits `data: {json}\n\n` frames of type "sources" | "token" | "error".

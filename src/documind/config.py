@@ -127,8 +127,19 @@ class Settings(BaseSettings):
         default=500,
         ge=1,
         le=2000,
-        description="Max upload size per file (MB). Keep in sync with "
-        "[server].maxUploadSize in .streamlit/config.toml.",
+        description="Max upload size per file (MB) for the Streamlit surface.",
+    )
+    max_indexed_storage_mb: int = Field(
+        default=500,
+        ge=50,
+        le=10000,
+        description="Approximate maximum Chroma storage consumed by indexed uploads.",
+    )
+    public_upload_mb: int = Field(
+        default=100,
+        ge=1,
+        le=2000,
+        description="Per-file cap enforced by the public web demo.",
     )
 
     # --- History ---------------------------------------------------------
@@ -169,7 +180,7 @@ class Settings(BaseSettings):
     # tracks an in-memory sliding window keyed by the visitor's IP (or the
     # value of ``X-Forwarded-For`` when running behind a proxy). 0 disables.
     rate_limit_per_min: int = Field(
-        default=20,
+        default=10,
         ge=0,
         le=10000,
         description="Per-visitor chat rate limit (req/min). 0 disables.",

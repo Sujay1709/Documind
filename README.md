@@ -97,7 +97,7 @@ The terminal above is the literal output of `git clone && pip install && bash st
 - **Long-running public web service.** `documind-web` keeps the LLM warm between requests, exposes `/upload` (multipart PDF), `/chat` (SSE stream of tokens + sources), `/api/chat` (single JSON), and `/healthz`. The same pipeline as the Streamlit app.
 - **One-command deploy.** Single Docker image, `docker compose up --build`, or push the existing `deploy/hf-spaces/` image to a Hugging Face Space. See [`DEPLOY.md`](DEPLOY.md) for HF Spaces, Render, Fly.io, and Cloud Run steps.
 - **Public demo.** Try the deployed browser app at [huggingface.co/spaces/sujay19/documind](https://huggingface.co/spaces/sujay19/documind). Treat uploads as disposable demo data and do not submit sensitive documents.
-- **Hardened for public use.** Per-visitor rate limit, optional `X-Documind-Token` gate, JSON-line audit log, capped streamed answers, path-traversal guard on the admin upload endpoint, and a `prompt-injection resistant` system prompt.
+- **Hardened for public use.** Ten-chat/minute and three-upload/hour visitor limits, 100 MB file and approximate 500 MB index caps, token-protected reset, JSON-line audit log, capped streamed answers, path-traversal guard on the admin upload endpoint, and a `prompt-injection resistant` system prompt.
 - **Live CI smoke test.** Every PR runs `scripts/smoke_webapp.py` against a freshly-booted uvicorn process, hitting every public route. Catches the "did the import break?" regressions that pure unit tests miss.
 - **Custom RAG evaluation harness.** Retrieval (hit@k, recall, MRR) and answer quality (token-F1, keyword recall, faithfulness, evidence quote support, abstention accuracy, optional LLM judge). The `--gate` mode fails on grounding regressions or evaluation failures. See [`EVAL.md`](EVAL.md).
 
@@ -183,19 +183,19 @@ Copy `.env.example` to `.env` and override any of the settings (all optional):
 | `DOCUMIND_PERSIST_DIR` | `./.documind/chroma` | Vector store location |
 | `DOCUMIND_HISTORY_FILE` | `./.documind/history.json` | Persistent Q&A history file |
 | `DOCUMIND_API_TOKEN` | _empty_ | If set, `/upload` and `/chat` require `X-Documind-Token` |
-| `DOCUMIND_RATE_LIMIT_PER_MIN` | `20` | Per-visitor chat cap; `0` disables |
+| `DOCUMIND_RATE_LIMIT_PER_MIN` | `10` | Per-visitor chat cap; `0` disables |
 | `DOCUMIND_SUMMARIZE_ON_UPLOAD` | `true` | Skip the post-upload summary in public demos |
 | `DOCUMIND_MAX_ANSWER_TOKENS` | `1500` | Char cap (×4) per streamed answer |
 | `DOCUMIND_UPLOAD_DIR` | `./uploads` | Admin path-upload reads from this dir only |
 | `DOCUMIND_MAX_HISTORY` | `200` | Max history entries retained |
-| `DOCUMIND_MAX_UPLOAD_MB` | `500` | Upload size shown in the UI (keep in sync with the server limit below) |
+| `DOCUMIND_MAX_UPLOAD_MB` | `500` | Streamlit upload size |
+| `DOCUMIND_PUBLIC_UPLOAD_MB` | `100` | Public web-demo upload size |
 
 ### Upload size
 
-PDFs can be up to **500 MB** per file. This is enforced by Streamlit via
-`maxUploadSize` in [`.streamlit/config.toml`](.streamlit/config.toml) and by the
-web app's `_MAX_UPLOAD_BYTES` constant. To change it, update **both** that value
-and `DOCUMIND_MAX_UPLOAD_MB`.
+PDFs can be up to **500 MB** per file in the local Streamlit surface. The public
+Docker demo uses a safer **100 MB** cap via `DOCUMIND_PUBLIC_UPLOAD_MB`. Streamlit's
+limit is also enforced by `maxUploadSize` in [`.streamlit/config.toml`](.streamlit/config.toml).
 
 ### Security & privacy
 

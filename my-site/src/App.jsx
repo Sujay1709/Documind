@@ -4,7 +4,7 @@ import Hero from './components/Hero.jsx'
 import Chat from './components/Chat.jsx'
 import Composer from './components/Composer.jsx'
 import AboutPage from './components/AboutPage.jsx'
-import { fetchSources, uploadFiles, streamChat, getToken, setToken } from './lib/api.js'
+import { fetchSources, uploadFiles, streamChat, getToken, setToken, resetData } from './lib/api.js'
 
 function now() {
   return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -22,6 +22,7 @@ export default function App() {
   const [hasToken, setHasToken] = useState(!!getToken())
   const [uploadStatus, setUploadStatus] = useState('No file selected.')
   const [uploading, setUploading] = useState(false)
+  const [indexedDocs, setIndexedDocs] = useState([])
   const [page, setPage] = useState(() => window.location.hash === '#about' ? 'about' : 'home')
   const mainRef = useRef(null)
   const idc = useRef(0)
@@ -79,6 +80,7 @@ export default function App() {
         const processed = await uploadFiles(files)
         const names = processed.map((x) => x.source).join(', ')
         setUploadStatus(`Indexed ${names}`)
+        setIndexedDocs(processed)
         setStarted(true)
         if (processed[0]?.source) setActiveSource(processed[0].source)
         await refreshDocs()
@@ -90,6 +92,24 @@ export default function App() {
     },
     [refreshDocs, uploading],
   )
+
+  useEffect(() => {
+    if (indexedDocs.length > 0) {
+      requestAnimationFrame(() => document.querySelector('.ask textarea')?.focus())
+    }
+  }, [indexedDocs])
+
+  async function handleReset() {
+    if (!window.confirm('Reset all indexed documents, history, summaries, and audit data?')) return
+    await resetData()
+    setDocs([])
+    setMessages([])
+    setIndexedDocs([])
+    setActiveSource(null)
+    setStarted(false)
+    setUploadStatus('Demo data reset.')
+    await refreshDocs()
+  }
 
   const sendQuestion = useCallback(
     async (q) => {
@@ -176,6 +196,7 @@ export default function App() {
           hasToken={hasToken}
           onAdmin={handleAdmin}
           onAbout={() => navigate('about')}
+          onReset={handleReset}
         />
         {page === 'about' ? (
           <AboutPage onBack={() => navigate('home')} />
@@ -183,7 +204,7 @@ export default function App() {
           <>
             <main className="main" ref={mainRef}>
               {started ? (
-                <Chat messages={messages} />
+                <Chat messages={messages} indexedDocs={indexedDocs} />
               ) : (
                 <Hero
                   status={uploadStatus}

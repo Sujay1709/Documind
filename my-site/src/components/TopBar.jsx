@@ -12,6 +12,7 @@ export default function TopBar({
   hasToken,
   onAdmin,
   onAbout,
+  onReset,
 }) {
   return (
     <motion.header
@@ -43,6 +44,7 @@ export default function TopBar({
       {docsLoading && <span className="status-inline">Loading…</span>}
       {docsError && <span className="status-inline error-inline" role="status">Server unavailable</span>}
       <button className="btn-ghost" type="button" onClick={onAbout}>About</button>
+      {hasToken && <button className="btn-ghost danger" type="button" onClick={onReset}>Reset data</button>}
       <button className="btn-ghost" type="button" onClick={onAdmin}>
         {hasToken ? 'Sign out' : 'Admin'}
       </button>
