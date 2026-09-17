@@ -1,3 +1,14 @@
+---
+title: DocuMind
+emoji: 📄
+colorFrom: orange
+colorTo: gray
+sdk: docker
+app_port: 7860
+pinned: false
+license: mit
+---
+
 <p align="center">
   <img src="docs/hero.svg" alt="DocuMind orange futuristic evidence-first RAG interface" width="100%">
 </p>

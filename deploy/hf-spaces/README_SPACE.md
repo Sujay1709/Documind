@@ -26,7 +26,8 @@ they survive restarts.
 | Path | Method | Purpose |
 |------|--------|---------|
 | `/` | GET | The chat UI (single-page app). |
-| `/healthz` | GET | Liveness probe; 200 if Ollama + Chroma are both reachable. |
+| `/healthz` | GET | Lightweight process liveness probe. |
+| `/readyz` | GET | Readiness probe for Ollama, models, and Chroma. |
 | `/api/sources` | GET | List of indexed document names. |
 | `/api/summary/{source}` | GET | Cached auto-summary for a document. |
 | `/api/history` | GET | Most recent Q&A history (JSON). |
