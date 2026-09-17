@@ -175,6 +175,7 @@ class SampleResult:
     answer: str
     retrieved_sources: list[str]
     metrics: dict[str, float]
+    error: str | None = None
 
 
 @dataclass
@@ -260,8 +261,23 @@ def evaluate_sample(
     settings: Settings | None = None,
 ) -> SampleResult:
     """Run the pipeline on one sample and compute its metrics."""
-    stream, retrieval = pipeline_answer(sample.question, source=source, settings=settings)
-    answer_text = "".join(stream)
+    try:
+        stream, retrieval = pipeline_answer(sample.question, source=source, settings=settings)
+        answer_text = "".join(stream)
+    except Exception as exc:  # keep the remaining eval set running
+        logger.exception("Evaluation failed for question %r", sample.question)
+        return SampleResult(
+            question=sample.question,
+            answer="",
+            retrieved_sources=[],
+            metrics={
+                "faithfulness": 0.0,
+                "evidence_quote_support": 0.0,
+                "abstention_accuracy": 0.0,
+                "evaluation_failure": 1.0,
+            },
+            error=str(exc),
+        )
 
     ranked_sources = [c.metadata.get("source", "unknown") for c in retrieval.chunks]
     retrieved_unique = list(dict.fromkeys(ranked_sources))  # keep order, dedupe
@@ -302,6 +318,38 @@ def _aggregate(results: list[SampleResult]) -> dict[str, float]:
             sums[k] += v
             counts[k] += 1
     return {k: round(sums[k] / counts[k], 4) for k in sums if counts[k]}
+
+
+class EvaluationGateError(RuntimeError):
+    """Raised when a report does not meet its minimum quality contract."""
+
+
+def enforce_gate(
+    report: EvalReport,
+    *,
+    min_faithfulness: float = 0.75,
+    min_evidence_quote_support: float = 0.80,
+    max_evaluation_failure: float = 0.0,
+) -> None:
+    """Fail explicitly when grounding or evaluation reliability regresses."""
+    required = {
+        "faithfulness": min_faithfulness,
+        "evidence_quote_support": min_evidence_quote_support,
+    }
+    failures = []
+    for metric, minimum in required.items():
+        actual = report.aggregate.get(metric)
+        if actual is None:
+            failures.append(f"{metric} is missing")
+        elif actual < minimum:
+            failures.append(f"{metric}={actual:.3f} < {minimum:.3f}")
+    failures_value = report.aggregate.get("evaluation_failure", 0.0)
+    if failures_value > max_evaluation_failure:
+        failures.append(
+            f"evaluation_failure={failures_value:.3f} > {max_evaluation_failure:.3f}"
+        )
+    if failures:
+        raise EvaluationGateError("RAG evaluation gate failed: " + "; ".join(failures))
 
 
 def evaluate_dataset(

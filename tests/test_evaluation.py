@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from documind import evaluation as ev
 from documind.evaluation import EvalSample
 from documind.pipeline import RetrievalResult
@@ -38,6 +40,25 @@ def test_evidence_quote_support_and_abstention():
     assert ev.evidence_quote_support('Evidence: "Berlin."', "Paris is the capital.") == 0.0
     assert ev.abstention_accuracy("I don't know based on the provided documents.", "") == 1.0
     assert ev.abstention_accuracy("Paris.", "") == 0.0
+
+
+def test_evaluation_gate_rejects_weak_or_failed_reports():
+    report = ev.EvalReport(
+        results=[],
+        aggregate={"faithfulness": 0.9, "evidence_quote_support": 0.9, "evaluation_failure": 0.1},
+    )
+    with pytest.raises(ev.EvaluationGateError):
+        ev.enforce_gate(report)
+
+
+def test_evaluation_continues_after_sample_failure(monkeypatch):
+    def failing_answer(question, history=None, source=None, settings=None):
+        raise RuntimeError("ollama unavailable")
+
+    monkeypatch.setattr(ev, "pipeline_answer", failing_answer)
+    report = ev.evaluate_dataset([EvalSample(question="q?")])
+    assert report.results[0].error == "ollama unavailable"
+    assert report.aggregate["evaluation_failure"] == 1.0
 
 
 def test_retrieval_metrics():

@@ -11,7 +11,9 @@ DocuMind ships with two surfaces that share one pipeline:
 
 ## What's the same
 
-Both surfaces call the same `documind.pipeline` code: same chunks, same cross-encoder re-ranker, same Ollama chat model, same guardrail system prompt. The only difference is the HTTP transport.
+Both surfaces call the same `documind.pipeline` code: same page/section metadata,
+PageIndex-style grouped retrieval, cross-encoder re-ranker, Ollama chat model, and
+evidence-first guardrail prompt. The only difference is the HTTP transport.
 
 ## What's new in the web app
 
@@ -22,6 +24,11 @@ Both surfaces call the same `documind.pipeline` code: same chunks, same cross-en
 - **Optional API token** — set `DOCUMIND_API_TOKEN` to require `X-Documind-Token` on `/upload` and `/chat`. Useful when you don't want anonymous traffic.
 - **Health probe** — `/healthz` returns 200 if both Ollama and Chroma are reachable, 503 otherwise. The Dockerfile's `HEALTHCHECK` uses it.
 - **Audit log** — every upload, chat start, chat end, and error is appended to `.documind/audit.log` as JSON lines.
+- **Failure-safe generation** — Ollama startup failures are retried before the first
+  token; partial streams are not silently retried or duplicated. Client-facing errors
+  are generic while detailed causes remain in the server log.
+- **Evidence-first answers** — the model must emit a verbatim `Evidence:` quote and
+  an `Answer:`. If the retrieved context is insufficient, it must abstain.
 
 ## Endpoints
 
@@ -50,6 +57,8 @@ Both surfaces call the same `documind.pipeline` code: same chunks, same cross-en
 | `DOCUMIND_OLLAMA_BASE_URL` | `http://localhost:11434` | Where Ollama listens. |
 | `DOCUMIND_CHAT_MODEL` | `llama3.2:3b` | Pulled on boot. |
 | `DOCUMIND_EMBEDDING_MODEL` | `nomic-embed-text` | Pulled on boot. |
+| `DOCUMIND_LLM_RETRIES` | `2` | Retries before the first output token only. |
+| `DOCUMIND_LLM_RETRY_BACKOFF_S` | `0.5` | Initial exponential retry delay. |
 
 ## Server-side path uploads (HF Spaces, VPS)
 
@@ -237,6 +246,36 @@ docker compose up --build           # web app on http://localhost:8000
 docker build -f deploy/hf-spaces/Dockerfile -t documind-space .
 docker run --rm -p 7860:7860 -v documind_data:/data documind-space
 ```
+
+## Reliability and evaluation gate
+
+Run the deterministic checks before deploying:
+
+```bash
+source .venv/bin/activate
+make test
+make lint
+make eval-gate
+```
+
+`make eval-gate` requires an indexed corpus and a running Ollama model. It fails when
+faithfulness or evidence-quote support falls below the configured thresholds, or when
+any evaluation sample fails. For CI and smoke checks that do not have Ollama, run
+`pytest -q` and `ruff check src tests`; the evaluation unit tests use mocked retrieval
+and verify the gate contract without weakening production checks.
+
+For offline RAFT/LoRA preparation:
+
+```bash
+documind-raft \
+  --questions data/raft/questions.json \
+  --documents data/raft/documents.json \
+  --out data/raft/train.jsonl
+```
+
+See [`docs/RAFT_LORA.md`](docs/RAFT_LORA.md). Training is intentionally separate from
+the serving container: select and review a base model, train with PEFT/QLoRA, evaluate
+against a held-out document split, then export a compatible Ollama model.
 
 ## Render.com
 

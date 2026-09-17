@@ -417,7 +417,15 @@ async def chat_sse(request: Request) -> Response:
         except Exception as exc:
             logger.exception("chat stream failed")
             _audit("chat_error", ip=visitor, error=str(exc))
-            yield await _sse({"type": "error", "message": str(exc)})
+            yield await _sse(
+                {
+                    "type": "error",
+                    "message": (
+                        "The answer could not be completed. Check that Ollama is running "
+                        "and try again."
+                    ),
+                }
+            )
 
     headers = {
         "Cache-Control": "no-cache",

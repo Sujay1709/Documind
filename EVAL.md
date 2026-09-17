@@ -18,6 +18,12 @@ use your **local Ollama** chat model — the same persistent backend as
 - `keyword_recall` — fraction of `expected_keywords` present in the answer.
 - `faithfulness` — share of the answer's content words found in the retrieved
   context (a free hallucination proxy; higher = better grounded).
+- `evidence_quote_support` — fraction of `Evidence: "..."` quotes that appear
+  verbatim in the retrieved context.
+- `abstention_accuracy` — whether a no-context answer explicitly abstains
+  instead of guessing.
+- `evaluation_failure` — fraction of samples that failed due to infrastructure
+  or model errors; a reliability gate requires this to be zero.
 - `llm_judge` *(optional, `--judge`)* — the local chat model grades groundedness
   1–5, normalised to 0–1.
 
@@ -61,7 +67,15 @@ documind-eval --dataset eval/sample_dataset.json --judge
 
 # one-shot JSON only (skip run history)
 documind-eval --dataset eval/sample_dataset.json --no-persist --out eval/oneshot.json
+
+# enforce the grounding contract; exits 1 on regression or sample failure
+documind-eval --dataset eval/sample_dataset.json --gate
 ```
+
+The default gate requires faithfulness >= `0.75`, evidence quote support >=
+`0.80`, and zero evaluation failures. Use `--min-faithfulness` and
+`--min-evidence-quote-support` to calibrate thresholds for a reviewed corpus.
+Missing metrics fail the gate instead of being treated as success.
 
 ### Persisted run history
 
@@ -86,3 +100,6 @@ needs Ollama, so it isn't part of the default PR pipeline; a manual
 **workflow_dispatch** job (`.github/workflows/eval.yml`) is provided to run it on
 demand. You can also run `documind-eval` inside the deployed Hugging Face Space
 (it already has Ollama and the models).
+
+Evaluation failures are retained per question in the report so one broken model
+request cannot hide failures in the rest of the dataset.

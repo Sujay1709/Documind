@@ -41,7 +41,10 @@ jobs:
 
       - name: Run evaluation
         run: |
-          documind-eval --dataset "${{ github.event.inputs.dataset }}" --out eval/report.json
+          documind-eval \
+            --dataset "${{ github.event.inputs.dataset }}" \
+            --gate \
+            --out eval/report.json
 
       - name: Upload report
         uses: actions/upload-artifact@v4

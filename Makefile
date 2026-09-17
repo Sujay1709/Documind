@@ -1,4 +1,4 @@
-.PHONY: install dev run test lint fmt clean benchmark eval
+.PHONY: install dev run test lint fmt clean benchmark eval eval-gate
 
 install:
 	pip install -r requirements.txt && pip install -e .
@@ -29,6 +29,9 @@ static-test:
 # eval/report.{json,md}; prints a delta vs the previous run when history exists.
 eval:
 	documind-eval --dataset eval/datasets/realistic.json
+
+eval-gate:
+	documind-eval --dataset eval/datasets/realistic.json --gate
 
 # Multi-config comparison grid (writes eval/benchmark.{json,md}).
 # Needs Ollama running with the configured models pulled.

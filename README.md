@@ -5,8 +5,8 @@
 # 📄 DocuMind
 
 <p align="center">
-  <a href="https://github.com/Sujay1709/documind-rag/actions/workflows/ci.yml"><img src="https://img.shields.io/badge/CI-passing-2A9D8F?style=flat-square" alt="CI"></a>
-  <a href="https://github.com/Sujay1709/documind-rag/actions/workflows/smoke.yml"><img src="https://img.shields.io/badge/smoke-passing-2A9D8F?style=flat-square" alt="smoke"></a>
+  <a href="https://github.com/Sujay1709/Documind/actions/workflows/ci.yml"><img src="https://img.shields.io/badge/CI-passing-2A9D8F?style=flat-square" alt="CI"></a>
+  <a href="https://github.com/Sujay1709/Documind/actions/workflows/smoke.yml"><img src="https://img.shields.io/badge/smoke-passing-2A9D8F?style=flat-square" alt="smoke"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="MIT"></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.10+-blue?style=flat-square" alt="Python 3.10+"></a>
   <img src="https://img.shields.io/badge/llama3.2-3B-blueviolet?style=flat-square" alt="llama3.2:3b">
@@ -45,7 +45,7 @@ The hero at the top of this README is a real product mockup of the running `docu
   <img src="docs/architecture.png" alt="DocuMind architecture: PDF to streamed cited answer" width="100%">
 </p>
 
-One pipeline, two surfaces. The Streamlit UI and the public web app call the *same* `documind.pipeline` — only the transport differs. PDF → chunks → embeddings → ChromaDB → top-30 candidates → cross-encoder re-rank → top-12 in document order → Ollama chat → streamed answer with page citations.
+One pipeline, two surfaces. The Streamlit UI and the public web app call the *same* `documind.pipeline` — only the transport differs. PDF → chunks with page/section metadata → embeddings → ChromaDB → top-30 candidates → cross-encoder re-rank → grouped PageIndex-style context → top-12 in document order → Ollama chat → evidence-first streamed answer with citations.
 
 The re-ranker is the load-bearing piece. A naive RAG drops the model's context window onto whatever the vector store retrieves first; DocuMind pulls 30 candidates, scores each `(query, chunk)` pair jointly with `cross-encoder/ms-marco-MiniLM-L-6-v2`, keeps the best 12, and re-orders them by page so multi-part answers (table of contents, step lists) come out in the document's own order.
 
@@ -57,6 +57,8 @@ The re-ranker is the load-bearing piece. A naive RAG drops the model's context w
 | `reranker.py` | Cross-encoder re-ranking of retrieved candidates. |
 | `llm.py` | Prompt construction and streaming generation via Ollama. |
 | `pipeline.py` | Orchestrates retrieve → re-rank → generate. |
+| `raft.py` | Builds distractor-aware RAFT JSONL examples for offline adaptation. |
+| `evaluation.py` | RAG metrics, failure capture, citation checks, and reliability gates. |
 | `app.py` | Streamlit chat UI (single-user, local). |
 | `webapp.py` | Starlette/uvicorn long-running public service. |
 
@@ -88,12 +90,15 @@ The terminal above is the literal output of `git clone && pip install && bash st
 
 - **Local-first.** Embeddings, retrieval, re-ranking, and generation all run via [Ollama](https://ollama.com) and [ChromaDB](https://www.trychroma.com) on your machine. Nothing leaves your computer.
 - **Citation-grounded answers.** Every response lists the file, page, and cross-encoder relevance score for the chunks it was grounded in. The model is instructed to answer *only* from your documents.
+- **Evidence-first generation.** Answers must include a verbatim `Evidence:` quote before `Answer:`. Missing evidence produces an explicit abstention instead of a guess.
+- **PageIndex-style context assembly.** Retrieved chunks are grouped by document/page/section before context construction, preserving nearby evidence and document order.
+- **RAFT-ready adaptation.** `documind-raft` creates golden-document, distractor, and no-golden examples for offline LoRA/QLoRA training.
 - **Cross-encoder re-ranking.** Naive vector search is fast but coarse. A cross-encoder scores each `(query, chunk)` pair jointly and gives a much more accurate ordering.
 - **Long-running public web service.** `documind-web` keeps the LLM warm between requests, exposes `/upload` (multipart PDF), `/chat` (SSE stream of tokens + sources), `/api/chat` (single JSON), and `/healthz`. The same pipeline as the Streamlit app.
 - **One-command deploy.** Single Docker image, `docker compose up --build`, or push the existing `deploy/hf-spaces/` image to a Hugging Face Space. See [`DEPLOY.md`](DEPLOY.md) for HF Spaces, Render, Fly.io, and Cloud Run steps.
 - **Hardened for public use.** Per-visitor rate limit, optional `X-Documind-Token` gate, JSON-line audit log, capped streamed answers, path-traversal guard on the admin upload endpoint, and a `prompt-injection resistant` system prompt.
 - **Live CI smoke test.** Every PR runs `scripts/smoke_webapp.py` against a freshly-booted uvicorn process, hitting every public route. Catches the "did the import break?" regressions that pure unit tests miss.
-- **Custom RAG evaluation harness.** Retrieval (hit@k, recall, MRR) and answer quality (token-F1, keyword recall, faithfulness, optional LLM judge). See [`EVAL.md`](EVAL.md).
+- **Custom RAG evaluation harness.** Retrieval (hit@k, recall, MRR) and answer quality (token-F1, keyword recall, faithfulness, evidence quote support, abstention accuracy, optional LLM judge). The `--gate` mode fails on grounding regressions or evaluation failures. See [`EVAL.md`](EVAL.md).
 
 ---
 
@@ -139,8 +144,8 @@ See **[DEPLOY.md](DEPLOY.md)** for HF Spaces, Render, Fly.io, and Cloud Run step
 ## ⚙️ Quick start
 
 ```bash
-git clone https://github.com/Sujay1709/documind-rag.git
-cd documind-rag
+git clone https://github.com/Sujay1709/Documind.git
+cd Documind
 
 python -m venv .venv && source .venv/bin/activate
 pip install -e .            # or: pip install -r requirements.txt
@@ -234,11 +239,12 @@ Space files live in [`deploy/hf-spaces/`](deploy/hf-spaces/).
 
 ```bash
 pip install -e ".[dev]"
-make test     # run the test suite (47 cases)
+make test     # run the test suite
 make lint     # ruff
 make fmt      # auto-format + fix
 make smoke    # live HTTP smoke test (boots uvicorn, hits /healthz etc.)
 make eval     # run a single-config RAG eval
+make eval-gate # enforce grounding and failure thresholds
 make benchmark  # multi-config grid → eval/benchmark.md
 ```
 
@@ -259,6 +265,9 @@ Compared with the original single-file prototype, DocuMind:
 - **Externalises configuration** instead of hard-coding URLs and model names.
 - **Defends every default with a benchmark.** Run `make benchmark` to re-derive
   `top_k_rerank=12` and `chunk_size=1000` for your own corpus.
+- **Adds failure-resistant evaluation.** A failed sample is recorded and the remaining
+  dataset continues; `documind-eval --gate` returns a non-zero exit code for missing or
+  weak grounding metrics.
 
 ---
 

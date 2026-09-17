@@ -22,6 +22,8 @@ from .evaluation import (
     DEFAULT_LATEST_MD,
     DEFAULT_RUNS_DIR,
     EvalReport,
+    EvaluationGateError,
+    enforce_gate,
     evaluate_dataset,
     format_aggregate_diff,
     load_dataset,
@@ -34,6 +36,13 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--dataset", required=True, help="Path to a JSON eval dataset.")
     p.add_argument("--source", default=None, help="Scope retrieval to this indexed document.")
     p.add_argument("--judge", action="store_true", help="Also score with the LLM judge.")
+    p.add_argument(
+        "--gate",
+        action="store_true",
+        help="Fail if grounding metrics regress below the reliability contract.",
+    )
+    p.add_argument("--min-faithfulness", type=float, default=0.75)
+    p.add_argument("--min-evidence-quote-support", type=float, default=0.80)
     p.add_argument(
         "--out",
         default=None,
@@ -80,6 +89,13 @@ def run(argv: list[str] | None = None) -> EvalReport:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(report.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"\nFull report written to {out}")
+    if args.gate:
+        enforce_gate(
+            report,
+            min_faithfulness=args.min_faithfulness,
+            min_evidence_quote_support=args.min_evidence_quote_support,
+        )
+        print("\nEvaluation gate: PASS")
     return report
 
 
@@ -89,6 +105,9 @@ def main(argv: list[str] | None = None) -> int:
     except FileNotFoundError as exc:
         print(f"Dataset not found: {exc}", file=sys.stderr)
         return 2
+    except EvaluationGateError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
     return 0
 
 
