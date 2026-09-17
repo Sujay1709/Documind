@@ -21,8 +21,9 @@ ENV PYTHONUNBUFFERED=1 \
     HF_HOME=/data/hf \
     PORT=7860
 
-# curl is used to install Ollama and for health checks.
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
+# curl is used to install Ollama and for health checks; zstd is required by the
+# current Ollama installer when extracting its release archive.
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates zstd \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Ollama (provides the `ollama` binary + server).
