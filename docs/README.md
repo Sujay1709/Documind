@@ -1,16 +1,17 @@
-# DocuMind screenshots
+# DocuMind visuals
 
-Place PNGs here for the README and any external sharing.
+The README uses lightweight SVG visuals that match the current orange-futuristic
+web app. Keep these assets in vector form so documentation stays small and sharp.
 
 | File | Use |
 | --- | --- |
-| `landing.png` | Top of README / project page — empty-state hero. |
-| `chat.png` | Mid-README — chat with expandable Sources panel. |
+| `landing.svg` | Workspace upload and empty state. |
+| `chat.svg` | Grounded chat with expandable Sources panel. |
 
 ## How to regenerate
 
-These mockups are baked from `landing.svg` and `chat.svg` so they're easy to
-tweak in any vector editor without re-running a model.
+These mockups are authored as `landing.svg` and `chat.svg` so they're easy to
+tweak in any vector editor without capturing sensitive documents.
 
 ```bash
 python -c "import cairosvg; cairosvg.svg2png(url='landing.svg', write_to='landing.png', output_width=1536); cairosvg.svg2png(url='chat.svg', write_to='chat.png', output_width=1536)"
@@ -30,9 +31,10 @@ For an authentic screenshot of the running app:
        browser = p.chromium.launch()
        page = browser.new_page(viewport={"width": 1440, "height": 900})
        page.goto("http://localhost:8501")
-       page.screenshot(path="docs/landing.png", full_page=False)
+       page.screenshot(path="/tmp/documind-landing.png", full_page=False)
    ```
-4. Replace the SVG-baked mockups if you want the README to show *real* runs.
+4. Keep real screenshots outside the repository unless they are intentionally
+   sanitized and approved for public sharing.
 
 The SVG versions stay as the fallback so the README is never broken when the
 app isn't running.

@@ -149,7 +149,7 @@
     <!-- Footer -->
     <g transform="translate(12, 690)">
       <text font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#5C7099">llama3.2:3b · nomic-embed · cross-encoder</text>
-      <text y="18" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#5C7099">↗ github.com/Sujay1709/documind-rag</text>
+      <text y="18" font-family="-apple-system,Helvetica,sans-serif" font-size="11" fill="#5C7099">↗ github.com/Sujay1709/Documind</text>
     </g>
   </g>
 

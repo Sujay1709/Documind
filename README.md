@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/hero.png" alt="DocuMind — local-first RAG for your PDFs, shown as a real screenshot of the running web app" width="100%">
+  <img src="docs/hero.svg" alt="DocuMind orange futuristic evidence-first RAG interface" width="100%">
 </p>
 
 # 📄 DocuMind
@@ -29,20 +29,20 @@
 
 ## ✨ Live demo
 
-The hero at the top of this README is a real product mockup of the running `documind-web` (matches the CSS in `src/documind/webapp/static/styles.css`). The two screenshots below are captured from a live `bash start-web.sh` session — landing and chat with cited sources.
+The hero at the top of this README reflects the current orange-futuristic interface: a focused upload workspace, evidence-first chat, source scope controls, and a dedicated project brief page.
 
-| Landing | Chat with cited sources |
+| Workspace | Grounded conversation |
 | :---: | :---: |
-| ![Landing page of DocuMind — choose a PDF or paste a path](docs/landing.png) | ![DocuMind answering a multi-chunk question with cited sources and a streaming cursor](docs/chat.png) |
+| ![DocuMind upload workspace](docs/landing.svg) | ![DocuMind grounded chat with cited sources](docs/chat.svg) |
 
-> To regenerate the screenshots from a running app, see [`docs/README.md`](docs/README.md). The hero `docs/hero.svg` is the source of truth for the front-page mockup and renders to `docs/hero.png` via cairosvg.
+> The SVG assets are lightweight documentation visuals and intentionally mirror the shipped interface without embedding an outdated screenshot.
 
 ---
 
 ## 🏗 Architecture
 
 <p align="center">
-  <img src="docs/architecture.png" alt="DocuMind architecture: PDF to streamed cited answer" width="100%">
+  <img src="docs/architecture.svg" alt="DocuMind architecture: PDF to streamed cited answer" width="100%">
 </p>
 
 One pipeline, two surfaces. The Streamlit UI and the public web app call the *same* `documind.pipeline` — only the transport differs. PDF → chunks with page/section metadata → embeddings → ChromaDB → top-30 candidates → cross-encoder re-rank → grouped PageIndex-style context → top-12 in document order → Ollama chat → evidence-first streamed answer with citations.
@@ -67,7 +67,7 @@ The re-ranker is the load-bearing piece. A naive RAG drops the model's context w
 ## 📊 Defended defaults, not magic numbers
 
 <p align="center">
-  <img src="docs/showcase.png" alt="Defended defaults: top_k_rerank=12 chosen by a side-by-side benchmark" width="100%">
+  <img src="docs/showcase.svg" alt="Defended defaults: top_k_rerank=12 chosen by a side-by-side benchmark" width="100%">
 </p>
 
 Every retrieval knob in `config.py` was chosen by a side-by-side benchmark on a 9-question eval set spanning 4 indexed PDFs (a resume, an AI-Fluency summary, a cloud-computing textbook, and an EDA report). Same dataset, same metric suite, four-trial grid in [`eval/benchmark.md`](eval/benchmark.md). Re-running the grid with `make benchmark` is the recommended way to defend a different default on a different corpus.
@@ -79,7 +79,7 @@ The headline result: bumping `top_k_rerank` from 8 to 12 raised **faithfulness 0
 ## 🚀 One-command demo
 
 <p align="center">
-  <img src="docs/terminal.png" alt="From clone to public URL in three commands" width="100%">
+  <img src="docs/terminal.svg" alt="From clone to public URL in three commands" width="100%">
 </p>
 
 The terminal above is the literal output of `git clone && pip install && bash start-web.sh`. The same `start-web.sh` works on a fresh Ubuntu VM, on macOS, and inside the HF Space container — one script, one model server, one URL.

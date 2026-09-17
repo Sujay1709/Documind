@@ -17,12 +17,12 @@
     <!-- Comment block -->
     <text x="40" y="80" fill="#5DD39E"># clone, install, run — three commands, one URL</text>
     <text x="40" y="110" fill="#A8C0E0">$ </text>
-    <text x="68" y="110" fill="#E6EEF8">git clone https://github.com/Sujay1709/documind-rag.git</text>
-    <text x="40" y="132" fill="#5C7099">  Cloning into 'documind-rag'...</text>
+    <text x="68" y="110" fill="#E6EEF8">git clone https://github.com/Sujay1709/Documind.git</text>
+    <text x="40" y="132" fill="#5C7099">  Cloning into 'Documind'...</text>
     <text x="40" y="152" fill="#5C7099">  Resolving deltas: 100% (47/47), done.</text>
 
     <text x="40" y="194" fill="#A8C0E0">$ </text>
-    <text x="68" y="194" fill="#E6EEF8">cd documind-rag &amp;&amp; pip install -e ".[dev]"</text>
+    <text x="68" y="194" fill="#E6EEF8">cd Documind &amp;&amp; pip install -e ".[dev]"</text>
     <text x="40" y="216" fill="#5C7099">  Obtaining file://.</text>
     <text x="40" y="236" fill="#5C7099">  Successfully installed documind-0.1.0 pydantic-2.13.4 ...</text>
 

@@ -3,6 +3,7 @@ import TopBar from './components/TopBar.jsx'
 import Hero from './components/Hero.jsx'
 import Chat from './components/Chat.jsx'
 import Composer from './components/Composer.jsx'
+import AboutPage from './components/AboutPage.jsx'
 import { fetchSources, uploadFiles, streamChat, getToken, setToken } from './lib/api.js'
 
 function now() {
@@ -21,6 +22,8 @@ export default function App() {
   const [hasToken, setHasToken] = useState(!!getToken())
   const [uploadStatus, setUploadStatus] = useState('No file selected.')
   const [uploading, setUploading] = useState(false)
+  const [page, setPage] = useState(() => window.location.hash === '#about' ? 'about' : 'home')
+  const mainRef = useRef(null)
   const idc = useRef(0)
   const nextId = () => `m${++idc.current}`
 
@@ -31,6 +34,23 @@ export default function App() {
     el.classList.add(theme)
     localStorage.setItem('documind:theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    const onHashChange = () => setPage(window.location.hash === '#about' ? 'about' : 'home')
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+
+  useEffect(() => {
+    if (page === 'home' && started) {
+      requestAnimationFrame(() => mainRef.current?.scrollTo({ top: mainRef.current.scrollHeight, behavior: 'smooth' }))
+    }
+  }, [messages, page, started])
+
+  function navigate(nextPage) {
+    window.location.hash = nextPage === 'about' ? 'about' : ''
+    setPage(nextPage)
+  }
 
   const refreshDocs = useCallback(async () => {
     setDocsLoading(true)
@@ -155,26 +175,33 @@ export default function App() {
           docsError={docsError}
           hasToken={hasToken}
           onAdmin={handleAdmin}
+          onAbout={() => navigate('about')}
         />
-        <main className="main">
-          {started ? (
-            <Chat messages={messages} />
-          ) : (
-            <Hero
-              status={uploadStatus}
-              onFiles={handleFiles}
-              onSuggest={sendQuestion}
-              disabledSuggest={busy || uploading || Boolean(docsError)}
-              uploading={uploading}
+        {page === 'about' ? (
+          <AboutPage onBack={() => navigate('home')} />
+        ) : (
+          <>
+            <main className="main" ref={mainRef}>
+              {started ? (
+                <Chat messages={messages} />
+              ) : (
+                <Hero
+                  status={uploadStatus}
+                  onFiles={handleFiles}
+                  onSuggest={sendQuestion}
+                  disabledSuggest={busy || uploading || Boolean(docsError)}
+                  uploading={uploading}
+                />
+              )}
+            </main>
+            <Composer
+              activeSource={activeSource}
+              onClearSource={() => setActiveSource(null)}
+              onSend={sendQuestion}
+              busy={busy || uploading || Boolean(docsError)}
             />
-          )}
-        </main>
-        <Composer
-          activeSource={activeSource}
-          onClearSource={() => setActiveSource(null)}
-          onSend={sendQuestion}
-          busy={busy || uploading || Boolean(docsError)}
-        />
+          </>
+        )}
       </div>
     </div>
   )
