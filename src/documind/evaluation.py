@@ -120,6 +120,24 @@ def faithfulness(answer: str, context: str) -> float:
     return supported / len(ans)
 
 
+def evidence_quote_support(answer: str, context: str) -> float:
+    """Return 1 when every quoted Evidence span is present in retrieved text."""
+    quotes = re.findall(r"Evidence:\s*[\"“](.*?)[\"”]", answer, flags=re.IGNORECASE)
+    if not quotes:
+        return 0.0
+    normalized_context = " ".join((context or "").split()).lower()
+    supported = sum(" ".join(quote.split()).lower() in normalized_context for quote in quotes)
+    return supported / len(quotes)
+
+
+def abstention_accuracy(answer: str, context: str) -> float:
+    """Score the required no-answer behavior when retrieval returned no context."""
+    if context.strip():
+        return 0.0
+    low = (answer or "").lower()
+    return 1.0 if "don't know" in low or "do not know" in low or "not found" in low else 0.0
+
+
 def retrieval_hit(expected_sources: list[str], retrieved_sources: list[str]) -> float:
     """1.0 if any expected source appears among retrieved sources, else 0.0."""
     if not expected_sources:
@@ -251,6 +269,8 @@ def evaluate_sample(
 
     metrics: dict[str, float] = {
         "faithfulness": round(faithfulness(answer_text, context), 4),
+        "evidence_quote_support": round(evidence_quote_support(answer_text, context), 4),
+        "abstention_accuracy": round(abstention_accuracy(answer_text, context), 4),
     }
     if sample.ground_truth:
         metrics["answer_f1"] = round(token_f1(answer_text, sample.ground_truth), 4)

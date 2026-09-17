@@ -32,6 +32,14 @@ def test_faithfulness():
     assert ev.faithfulness("", "anything") == 0.0
 
 
+def test_evidence_quote_support_and_abstention():
+    answer = 'Evidence: "Paris is the capital of France." Answer: Paris.'
+    assert ev.evidence_quote_support(answer, "Paris is the capital of France.") == 1.0
+    assert ev.evidence_quote_support('Evidence: "Berlin."', "Paris is the capital.") == 0.0
+    assert ev.abstention_accuracy("I don't know based on the provided documents.", "") == 1.0
+    assert ev.abstention_accuracy("Paris.", "") == 0.0
+
+
 def test_retrieval_metrics():
     assert ev.retrieval_hit(["a"], ["b", "a"]) == 1.0
     assert ev.retrieval_hit(["a"], ["b", "c"]) == 0.0

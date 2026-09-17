@@ -63,9 +63,11 @@ state to assistive technology.
 Target: React/Vite frontend engineer.
 
 Implement exactly this specification using the tokens in `DESIGN.md`; do not redesign or replace
-the component system. Existing UI changes already cover scope selection, upload locking, server
-errors, focus styles, theme first paint, and mobile 3D reduction. Future UI work should close the
-remaining generation cancellation and citation-state gaps without reintroducing decorative effects.
+the component system. Existing UI changes cover scope selection, upload locking, server errors, focus styles, theme first
+paint, and mobile reduction. The visual layer now uses two lightweight local SVGs (a grid and an
+orbital line layer) instead of a continuously rendered 3D scene; this keeps the orange/futuristic
+direction performant and accessible without changing product behavior. Future UI work should close
+the remaining generation cancellation and citation-state gaps without reintroducing decorative effects.
 
 ## Pre-flight result
 

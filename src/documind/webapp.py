@@ -355,6 +355,7 @@ async def chat_sse(request: Request) -> Response:
                 {
                     "source": c.metadata.get("source", "unknown"),
                     "page": c.metadata.get("page"),
+                    "section": c.metadata.get("section_title"),
                     "score": round(float(c.score), 4),
                     "snippet": c.text[:400],
                 }
@@ -566,6 +567,7 @@ async def chat_post_ndjson(request: Request) -> Response:
                 {
                     "source": c.metadata.get("source", "unknown"),
                     "page": c.metadata.get("page"),
+                    "section": c.metadata.get("section_title"),
                     "score": round(float(c.score), 4),
                     "snippet": c.text[:400],
                 }

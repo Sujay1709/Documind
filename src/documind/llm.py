@@ -32,7 +32,13 @@ SYSTEM_PROMPT = (
     "details as short paragraphs or bullet points when there are multiple parts. "
     "When the answer is a sequence — a table of contents, chapters, or steps — "
     "preserve the document's original order.\n"
-    "7. Cite the source file and page for the facts you use. Do not invent facts, "
+    "7. Before the answer, include one or more short verbatim supporting quotes using "
+    "the format `Evidence: \"...\"`. Only quote text that appears in CONTEXT.\n"
+    "8. Then write `Answer:` followed by the concise answer. If CONTEXT does not "
+    "support the answer, write `Evidence: None found in the provided documents.` and "
+    "then `Answer: I don't know based on the provided documents.` Do not infer an "
+    "answer from the question alone.\n"
+    "9. Cite the source file and page for the facts you use. Do not invent facts, "
     "sources, or page numbers."
 )
 

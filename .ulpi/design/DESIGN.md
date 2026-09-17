@@ -2,15 +2,17 @@
 
 ## Design read
 
-DocuMind should feel like a quiet document workbench, not an AI novelty surface. The visual bet is
-that trust comes from readable evidence, calm hierarchy, and visible system state.
+DocuMind should feel like a warm instrument panel for navigating evidence: futuristic in its signal
+language, grounded in the legibility of a document workbench. The visual bet is that trust comes
+from readable evidence, calm hierarchy, and visible system state.
 
 ## Aesthetic direction
 
-**Technical / utilitarian.** The product is a local retrieval tool used while reading and checking
-documents. Its identity is a restrained instrument panel: ruled surfaces, precise labels, compact
-controls, and one high-signal accent. It deliberately rejects generic chatbot neon, decorative
-glass on every element, and centered marketing hero composition.
+**Technical / utilitarian with ember signal.** The product is a local retrieval tool used while
+reading and checking documents. Its identity is a restrained instrument panel: ruled surfaces,
+precise labels, compact controls, and a focused orange signal against ink and paper. Static grid
+and orbital linework add a futuristic frame without turning the evidence into spectacle. It rejects
+generic chatbot neon, decorative glass on every element, and centered marketing hero composition.
 
 Counterfactual test: this is not the default look for an AI chat product because the primary
 interaction is an evidence rail and document scope, not a glowing assistant persona.
@@ -31,11 +33,11 @@ interaction is an evidence rail and document scope, not a glowing assistant pers
 Use the existing dark/light theme variables as implementation tokens, but keep the visual hierarchy
 below:
 
-- Canvas: deep ink in dark mode, cool mist in light mode.
+- Canvas: deep brown-black in dark mode, warm paper in light mode.
 - Surface: opaque enough for reading; translucency is reserved for the app shell and composer.
 - Text: high-contrast ink.
 - Muted text: metadata only, never essential instructions.
-- Accent: electric blue for one primary action and focus ring.
+- Accent: safety orange for one primary action and focus ring.
 - Semantic red: errors and interrupted generation only.
 
 Text must meet WCAG AA: 4.5:1 for normal text, 3:1 for large text and controls. Focus indicators
@@ -52,8 +54,8 @@ must remain visible in both themes.
 
 - Spacing scale: 4, 8, 12, 16, 24, 32.
 - Radius scale: 10px controls, 16px messages, 20px upload surface, pill only for scope/status.
-- Motion: one page-load reveal plus short state transitions. No infinite motion except the streaming
-  cursor. Respect `prefers-reduced-motion`.
+- Motion: one page-load reveal plus short state transitions. Decorative background layers are static;
+  no infinite motion except the streaming cursor. Respect `prefers-reduced-motion`.
 - Touch targets: minimum 44px.
 
 ## Voice

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import Background3D from './components/Background3D.jsx'
 import TopBar from './components/TopBar.jsx'
 import Hero from './components/Hero.jsx'
 import Chat from './components/Chat.jsx'
@@ -141,7 +140,10 @@ export default function App() {
 
   return (
     <div className="root-wrap" onDragOver={(e) => e.preventDefault()} onDrop={onDrop}>
-      <Background3D theme={theme} />
+      <div className="ambient" aria-hidden="true">
+        <div className="ambient-grid" />
+        <div className="ambient-orbit" />
+      </div>
       <div className="app">
         <TopBar
           theme={theme}

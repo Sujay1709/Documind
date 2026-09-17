@@ -74,9 +74,28 @@ def split_documents(
         if len(cleaned) < settings.min_chunk_chars:
             continue
         chunk.page_content = cleaned
-        chunk.metadata.setdefault("page", chunk.metadata.get("page", 0))
+        page = chunk.metadata.get("page", 0)
+        chunk.metadata.setdefault("page", page)
+        # Keep hierarchy metadata scalar so it can be stored by Chroma.  A
+        # loader may provide richer section information; otherwise a page is
+        # the safest deterministic section boundary.
+        section_title = (
+            chunk.metadata.get("section_title")
+            or chunk.metadata.get("section")
+            or (f"Page {page + 1}" if isinstance(page, int) else "Document")
+        )
+        chunk.metadata["section_title"] = str(section_title)
+        chunk.metadata.setdefault(
+            "section_id",
+            f"page-{page}" if isinstance(page, int) else "document",
+        )
+        chunk.metadata.setdefault(
+            "section_index",
+            page if isinstance(page, int) else 0,
+        )
         chunk.metadata["source"] = source_name
         chunk.metadata["chunk_index"] = len(chunks)
+        chunk.metadata["document_order"] = len(chunks)
         chunks.append(chunk)
 
     logger.info("Split %s into %d clean chunk(s)", source_name, len(chunks))

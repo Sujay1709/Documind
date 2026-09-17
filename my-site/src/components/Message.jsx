@@ -29,10 +29,11 @@ export default function Message({ msg }) {
             {msg.sources.map((s, i) => {
               const pct = relevancePct(s.score)
               const page = typeof s.page === 'number' ? ` · p.${s.page + 1}` : ''
+              const section = s.section ? ` · ${s.section}` : ''
               const snip = s.snippet ? s.snippet.slice(0, 280) + (s.snippet.length > 280 ? '…' : '') : ''
               return (
                 <li key={i}>
-                  <span className="src-head">{s.source || 'unknown'}{page}</span>
+                  <span className="src-head">{s.source || 'unknown'}{page}{section}</span>
                   {pct != null && <span className="src-rel">{pct}% match</span>}
                   {snip && <span className="src-snippet">{snip}</span>}
                 </li>

@@ -37,6 +37,7 @@ dev = [
 [project.scripts]
 documind = "documind.app:main"
 documind-eval = "documind.evaluate:main"
+documind-raft = "documind.raft_cli:main"
 documind-web = "documind.webapp:main"
 
 [project.urls]
