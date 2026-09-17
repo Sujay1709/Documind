@@ -17,13 +17,13 @@ button, textarea, select { font: inherit; }
 button { color: inherit; }
 a { color: var(--accent); }
 ::selection { background: rgba(249, 115, 22, .3); }
-.root-wrap { min-height: 100%; position: relative; isolation: isolate; }
+.root-wrap { width: 100%; height: 100dvh; position: relative; isolation: isolate; overflow: hidden; }
 .ambient { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: var(--page); }
 .ambient::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 72% 18%, rgba(249,115,22,.13), transparent 34%), linear-gradient(120deg, transparent 45%, rgba(249,115,22,.05) 100%); }
 .ambient-grid, .ambient-orbit { position: absolute; background-repeat: no-repeat; background-size: cover; opacity: .8; }
 .ambient-grid { inset: 0; background-image: url('/assets/documind-grid.svg'); background-position: center; mask-image: linear-gradient(to bottom, black, transparent 85%); }
 .ambient-orbit { width: min(900px, 75vw); height: 630px; right: -9vw; top: -80px; background-image: url('/assets/documind-orbit.svg'); background-size: contain; background-position: top right; }
-.app { position: relative; min-height: 100%; display: flex; flex-direction: column; }
+.app { position: relative; width: 100%; height: 100dvh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 .glass { background: var(--surface); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
 .bar { display: flex; align-items: center; gap: 12px; padding: 14px clamp(16px, 4vw, 52px); border-bottom: 1px solid var(--border); background: var(--surface-strong); }
 .bar .logo { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--border-strong); border-radius: 10px; color: var(--accent); font-size: 1rem; background: var(--accent-soft); }
@@ -38,7 +38,7 @@ a { color: var(--accent); }
 .doc-select select { max-width: 190px; padding: 7px 28px 7px 11px; color: var(--text); }
 .error-inline, .err { color: #ffb4a2; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
-.main { flex: 1; min-height: 0; width: min(980px, 100%); margin: auto; overflow-y: auto; overscroll-behavior: contain; scroll-behavior: smooth; padding: 42px 20px 28px; }
+.main { flex: 1 1 0; height: 0; min-height: 0; width: min(980px, 100%); margin: auto; overflow-x: hidden; overflow-y: scroll; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; scrollbar-gutter: stable; scroll-behavior: smooth; padding: 42px 20px 28px; }
 .hero { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; padding: 30px 8px; }
 .badge { border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px; color: var(--muted); background: var(--surface-muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .1em; }
 .hero h1 { margin: 4px 0 0; font-size: clamp(2.4rem, 7vw, 5.2rem); line-height: .95; letter-spacing: -.07em; max-width: 780px; }

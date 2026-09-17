@@ -4,7 +4,10 @@ import Message from './Message.jsx'
 export default function Chat({ messages, indexedDocs = [] }) {
   const endRef = useRef(null)
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' })
+    const scroller = endRef.current?.closest('.main')
+    if (scroller) {
+      scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' })
+    }
   }, [messages])
 
   return (
