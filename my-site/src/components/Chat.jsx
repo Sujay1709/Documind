@@ -8,7 +8,7 @@ export default function Chat({ messages }) {
   }, [messages])
 
   return (
-    <section className="thread">
+    <section className="thread" aria-live="polite" aria-label="Conversation">
       {messages.map((m) => (
         <Message key={m.id} msg={m} />
       ))}

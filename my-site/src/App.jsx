@@ -4,7 +4,6 @@ import Hero from './components/Hero.jsx'
 import Chat from './components/Chat.jsx'
 import Composer from './components/Composer.jsx'
 import { fetchSources, uploadFiles, streamChat, getToken, setToken } from './lib/api.js'
-import { escapeHtml } from './lib/markdown.js'
 
 function now() {
   return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -64,7 +63,7 @@ export default function App() {
         if (processed[0]?.source) setActiveSource(processed[0].source)
         await refreshDocs()
       } catch (e) {
-        setUploadStatus(`<span class="err">${escapeHtml(String(e.message || e))}</span>`)
+        setUploadStatus(String(e.message || e))
       } finally {
         setUploading(false)
       }

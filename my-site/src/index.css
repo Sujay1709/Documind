@@ -33,7 +33,7 @@ a { color: var(--accent); }
 .pill, .btn-ghost, .doc-select select, .source-pill { border: 1px solid var(--border); border-radius: 999px; background: var(--surface-muted); }
 .pill { padding: 5px 11px; }
 .pill b { color: var(--text); }
-.btn-ghost { padding: 7px 12px; cursor: pointer; }
+.btn-ghost { min-height: 44px; padding: 7px 12px; cursor: pointer; }
 .btn-ghost:hover, .btn-ghost:focus-visible { border-color: var(--border-strong); color: var(--accent); }
 .doc-select select { max-width: 190px; padding: 7px 28px 7px 11px; color: var(--text); }
 .error-inline, .err { color: #ffb4a2; }
@@ -71,7 +71,7 @@ a { color: var(--accent); }
 .sources { margin-top: 12px; }
 .sources summary { display: inline-flex; padding: 5px 10px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); cursor: pointer; font-size: .8rem; }
 .sources ol { margin: 10px 0 0; padding-left: 20px; }
-.sources li { margin-bottom: 8px; padding: 8px 10px; border-left: 2px solid var(--accent); background: var(--surface-muted); }
+.sources li { margin-bottom: 8px; padding: 8px 10px; border-left: 1px solid var(--accent); background: var(--surface-muted); }
 .src-head { font-weight: 700; }
 .src-rel { margin-left: 6px; color: var(--accent); font-size: .72rem; }
 .err { display: inline-block; padding: 8px 12px; border: 1px solid rgba(255, 110, 80, .4); border-radius: 9px; background: rgba(180, 47, 20, .15); }

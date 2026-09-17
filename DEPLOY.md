@@ -54,7 +54,7 @@ evidence-first guardrail prompt. The only difference is the HTTP transport.
 | `DOCUMIND_SUMMARIZE_ON_UPLOAD` | `true` | Disable to skip the post-upload LLM pass. |
 | `DOCUMIND_MAX_ANSWER_TOKENS` | `1500` | Char cap (×4) per streamed answer. |
 | `DOCUMIND_UPLOAD_DIR` | `./uploads` | Admin path-upload reads from this dir only. |
-| `DOCUMIND_OLLAMA_BASE_URL` | `http://localhost:11434` | Where Ollama listens. |
+| `DOCUMIND_OLLAMA_BASE_URL` | `http://localhost:11434` | Where Ollama listens; set this to an external Ollama-compatible endpoint for hosted inference. |
 | `DOCUMIND_CHAT_MODEL` | `llama3.2:3b` | Pulled on boot. |
 | `DOCUMIND_EMBEDDING_MODEL` | `nomic-embed-text` | Pulled on boot. |
 | `DOCUMIND_LLM_RETRIES` | `2` | Retries before the first output token only. |
@@ -177,8 +177,9 @@ the Groq call is browser-direct.
 
 ## Hugging Face Spaces (Docker — the original, kept for reference)
 
-This deploys the whole app — web UI **and** a bundled Ollama server — into a
-single Docker Space, so it's reachable from a public URL anywhere.
+This deploys the whole app — web UI and the Python service — into a single Docker
+Space, so it's reachable from a public URL anywhere. The image can use either its
+bundled Ollama server or an external Ollama-compatible endpoint.
 
 > **Heads-up on the free tier.** Spaces' free hardware is CPU-only (2 vCPU, 16 GB
 > RAM). `llama3.2:3b` runs there but answers are slow, and unless you add
@@ -186,6 +187,10 @@ single Docker Space, so it's reachable from a public URL anywhere.
 > minutes). For a snappier demo, upgrade the Space hardware or attach a persistent
 > disk. For production speed you'd point `DOCUMIND_OLLAMA_BASE_URL` at a GPU-backed
 > Ollama host instead.
+
+Set `DOCUMIND_OLLAMA_BASE_URL` to an external Ollama-compatible service to avoid
+downloading models into the Space. Configure endpoint credentials as Space Secrets;
+never commit tokens or embed them in a URL.
 
 ### What's in `deploy/hf-spaces/`
 
@@ -226,9 +231,10 @@ single Docker Space, so it's reachable from a public URL anywhere.
    https://huggingface.co/settings/tokens with *write* scope, and use it as the
    git password.)
 
-3. **Watch it build.** Open the Space → **Logs**. You'll see Ollama start, the
-   models download, then the web app launch. When the build finishes, the app
-   loads in the Space's **App** tab.
+3. **Watch it build.** Open the Space → **Logs**. With the default localhost
+   configuration, Ollama starts and the models download before the web app
+   launches. With an external endpoint, the app skips the bundled model startup.
+   When the build finishes, the app loads in the Space's **App** tab.
 
 ### Optional: faster / persistent
 

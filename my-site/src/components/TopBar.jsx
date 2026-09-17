@@ -21,7 +21,7 @@ export default function TopBar({
     >
       <motion.div className="logo" whileHover={{ rotate: -8, scale: 1.06 }}>📄</motion.div>
       <div className="name">DocuMind</div>
-      <div className="tag">· local RAG · Ollama nemotron</div>
+      <div className="tag">· grounded RAG · Ollama-compatible inference</div>
       <div className="spacer" />
       <div className="pill docs" title="Indexed documents on this server">
         📚 <b>{docCount}</b> docs

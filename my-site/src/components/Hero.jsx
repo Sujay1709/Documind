@@ -30,11 +30,11 @@ export default function Hero({ status, onFiles, onSuggest, disabledSuggest, uplo
 
   return (
     <motion.section className="hero" variants={container} initial="hidden" animate="show">
-      <motion.div className="badge" variants={item}>🔒 Local-first · Ollama on your machine</motion.div>
+      <motion.div className="badge" variants={item}>🔒 Private document context · Ollama-compatible inference</motion.div>
       <motion.h1 variants={item}>Drop a PDF to start</motion.h1>
       <motion.p variants={item}>
         DocuMind indexes your PDF into a persistent Chroma store, retrieves and re-ranks the best
-        chunks, then streams an answer from your local Ollama model — no API key required.
+        chunks, then streams an evidence-grounded answer from your configured Ollama-compatible model.
       </motion.p>
 
       <motion.div
@@ -67,8 +67,8 @@ export default function Hero({ status, onFiles, onSuggest, disabledSuggest, uplo
             e.target.value = ''
           }}
         />
-        <div className="status" dangerouslySetInnerHTML={{ __html: status }} />
-        <div className="hint">Up to 500 MB. Embeddings and chat run through the local DocuMind server + Ollama.</div>
+        <div className="status" role="status" aria-live="polite">{status}</div>
+        <div className="hint">Up to 500 MB. Embeddings and chat run through the configured DocuMind server.</div>
       </motion.div>
 
       <motion.h2 className="suggest-label" variants={item}>Or try one of these</motion.h2>

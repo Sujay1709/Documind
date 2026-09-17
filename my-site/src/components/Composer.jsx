@@ -67,7 +67,7 @@ export default function Composer({ activeSource, onClearSource, onSend, busy }) 
 
       <div className="foot">
         <span>nomic-embed · ms-marco re-ranker · Ollama nemotron-mini</span>
-        <a href="https://github.com/Sujay1709/documind-rag" target="_blank" rel="noreferrer">Source &amp; docs ↗</a>
+        <a href="https://github.com/Sujay1709/Documind" target="_blank" rel="noreferrer">Source &amp; docs ↗</a>
       </div>
     </footer>
   )
