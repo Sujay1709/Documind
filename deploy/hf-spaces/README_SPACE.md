@@ -41,7 +41,8 @@ they survive restarts.
 | `DOCUMIND_API_TOKEN` | _empty_ | If set, requests must send `X-Documind-Token`. |
 | `DOCUMIND_RATE_LIMIT_PER_MIN` | `20` | Per-visitor chat cap; `0` disables. |
 | `DOCUMIND_SUMMARIZE_ON_UPLOAD` | `true` | Disable to skip the post-upload LLM pass. |
+| `DOCUMIND_OLLAMA_BASE_URL` | `http://localhost:11434` | Set to an external Ollama-compatible endpoint to skip bundled model startup. |
 | `DOCUMIND_CHAT_MODEL` | `llama3.2:3b` | Pulled on boot. |
 | `DOCUMIND_EMBEDDING_MODEL` | `nomic-embed-text` | Pulled on boot. |
 
-Source & docs: https://github.com/Sujay1709/documind-rag
+Source & docs: https://github.com/Sujay1709/Documind
